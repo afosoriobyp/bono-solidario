@@ -34,6 +34,11 @@ def upgrade():
             continue
         email = user[1]
         nombre = user[0] or (email.split('@')[0] if email else f'user{uid}')
+        
+        # Truncar datos para evitar errores de longitud en PostgreSQL
+        email = email[:120] if email else None
+        nombre = nombre[:128] if nombre else f'user{uid}'
+        
         # buscar seller existente por email
         seller_row = None
         if email:
@@ -41,7 +46,7 @@ def upgrade():
         if seller_row:
             sid = seller_row[0]
         else:
-            conn.execute(text('INSERT INTO seller (identificacion, nombre, direccion, telefono, email, tratamiento_datos, estado) VALUES (:ident, :nombre, NULL, NULL, :email, 0, :estado)'),
+            conn.execute(text('INSERT INTO seller (identificacion, nombre, direccion, telefono, email, tratamiento_datos, estado) VALUES (:ident, :nombre, NULL, NULL, :email, false, :estado)'),
                          {'ident': None, 'nombre': nombre, 'email': email, 'estado': 'activo'})
             sid = conn.execute(text('SELECT id FROM seller WHERE email = :email ORDER BY id DESC LIMIT 1'), {'email': email}).fetchone()[0]
         conn.execute(text('UPDATE ticket SET seller_data_id = :sid WHERE id = :tid'), {'sid': sid, 'tid': tid})
