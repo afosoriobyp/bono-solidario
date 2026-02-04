@@ -12,9 +12,15 @@ def create_admin():
         # Verificar si ya existe el admin
         existing = User.query.filter_by(username='admin').first()
         if existing:
-            print(f"✓ Usuario 'admin' ya existe (ID: {existing.id})")
+            # Actualizar para asegurar que esté activo
+            existing.is_active = True
+            existing.password_hash = generate_password_hash('admin123')
+            db.session.commit()
+            print(f"✓ Usuario 'admin' actualizado (ID: {existing.id})")
             print(f"  Email: {existing.email}")
             print(f"  Rol: {existing.role}")
+            print(f"  Activo: {existing.is_active}")
+            print(f"  Password actualizado a: admin123")
             return
         
         # Crear nuevo usuario admin
@@ -22,7 +28,8 @@ def create_admin():
             username='admin',
             email='admin@bonos.com',
             password_hash=generate_password_hash('admin123'),
-            role='admin'
+            role='admin',
+            is_active=True  # Asegurar que esté activo
         )
         
         db.session.add(admin)
@@ -33,6 +40,7 @@ def create_admin():
         print(f"  Password: admin123")
         print(f"  Email: admin@bonos.com")
         print(f"  Rol: admin")
+        print(f"  Activo: {admin.is_active}")
         print(f"  ID: {admin.id}")
         print("\n⚠️  IMPORTANTE: Cambia la contraseña después del primer login")
 
