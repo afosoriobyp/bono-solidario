@@ -134,7 +134,9 @@ git push -u origin main
 
 ### 5️⃣ Configurar Variables de Entorno
 
-En la sección **"Environment"** del Web Service, añade:
+**🚨 PASO CRÍTICO - OBLIGATORIO:**
+
+En la sección **"Environment"** del Web Service, añade TODAS estas variables:
 
 ```
 FLASK_APP=run.py
@@ -147,6 +149,24 @@ MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
 MAIL_PASSWORD=qdlu vicv fhgd eqrm
 MAIL_DEFAULT_SENDER=bonos.perpetuosocorro@gmail.com
 ```
+
+**⚠️ MUY IMPORTANTE - `DATABASE_URL`:**
+
+1. Ve a tu PostgreSQL Database en Render
+2. Busca la sección **"Connections"**
+3. **COPIA la "Internal Database URL"** (NO la External)
+4. Pégala en `DATABASE_URL` (sin comillas, sin espacios)
+
+Ejemplo de URL válida:
+```
+postgresql://bonos_user:abc123@dpg-xxxx.oregon-postgres.render.com/bonos_db
+```
+
+**❌ Si no configuras `DATABASE_URL`, obtendrás error:**
+```
+sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL
+```
+👉 Ver [ERROR_DATABASE_URL.md](ERROR_DATABASE_URL.md) para solución detallada.
 
 **⚠️ IMPORTANTE:** 
 - Para `SECRET_KEY`, genera una clave segura:
@@ -239,6 +259,25 @@ python -c "import secrets; print(secrets.token_hex(32))"
 ---
 
 ## 🚨 Solución de Problemas Comunes
+
+### ❌ Error: "Could not parse SQLAlchemy URL" (MÁS COMÚN)
+
+```
+sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL string
+```
+
+**Causa:** La variable `DATABASE_URL` NO está configurada o está vacía.
+
+**Solución:**
+1. Ve a tu PostgreSQL Database en Render Dashboard
+2. Copia la **Internal Database URL** de la sección "Connections"
+3. Ve a tu Web Service → Environment
+4. Agrega/edita la variable `DATABASE_URL` con la URL copiada
+5. Guarda y espera el redeploy automático
+
+👉 **Ver guía completa:** [ERROR_DATABASE_URL.md](ERROR_DATABASE_URL.md)
+
+---
 
 ### Error: "Application failed to start"
 - Verifica logs en Render

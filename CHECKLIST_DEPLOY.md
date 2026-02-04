@@ -45,17 +45,30 @@ git push -u origin main
    - Plan: Free o Starter $7/mes
 
 4. Variables de entorno (copiar desde .env):
+   
+   **🚨 CRÍTICO - Debes configurar `DATABASE_URL`:**
+   
+   1. Ve a tu PostgreSQL en Render Dashboard
+   2. Sección "Connections" → Copia **Internal Database URL**
+   3. Pégala en la variable `DATABASE_URL` (sin comillas)
+   
    ```
    FLASK_APP=run.py
    FLASK_DEBUG=False
-   SECRET_KEY=<generar-nueva-clave>
-   DATABASE_URL=<URL-de-PostgreSQL-de-Render>
+   SECRET_KEY=6120fd6bbd66e4bd898d20a31e6c142517ab69a9a3a2a01f9852696f3025ee22
+   DATABASE_URL=postgresql://usuario:password@dpg-xxxx.oregon-postgres.render.com/bonos_db
    MAIL_SERVER=smtp.gmail.com
    MAIL_PORT=587
    MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
    MAIL_PASSWORD=<password-de-aplicacion-gmail>
    MAIL_DEFAULT_SENDER=bonos.perpetuosocorro@gmail.com
    ```
+   
+   **❌ Si DATABASE_URL está vacía o no existe:**
+   ```
+   Error: Could not parse SQLAlchemy URL from given URL string
+   ```
+   👉 Ver [ERROR_DATABASE_URL.md](ERROR_DATABASE_URL.md) para solución
 
 5. Deploy automático
 
@@ -105,6 +118,26 @@ Consulta `DEPLOY_RENDER.md` para:
 8. ✅ Crea datos de prueba si es necesario
 
 ## 🆘 Si algo falla
+
+### ❌ Error más común: "Could not parse SQLAlchemy URL"
+
+**Síntoma:**
+```
+sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL string
+```
+
+**Solución Rápida:**
+1. Dashboard Render → PostgreSQL Database → "Connections"
+2. Copiar **Internal Database URL**
+3. Web Service → "Environment" → Editar `DATABASE_URL`
+4. Pegar URL (sin comillas, sin espacios)
+5. "Save Changes" → Redeploy automático
+
+👉 **Guía detallada:** [ERROR_DATABASE_URL.md](ERROR_DATABASE_URL.md)
+
+---
+
+### Otros problemas:
 
 1. Revisa logs en Render Dashboard
 2. Verifica que `DATABASE_URL` esté configurado
