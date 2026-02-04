@@ -5,7 +5,7 @@ class Ticket(db.Model):
     number = db.Column(db.String(20), nullable=False)
     raffle_id = db.Column(db.Integer, db.ForeignKey('raffle.id'))
     # Tras normalización, seller_id referencia a tabla `seller`
-    seller_id = db.Column(db.Integer, db.ForeignKey('seller.id'))
+    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     # Nueva relación: referencia a Buyer
     buyer_data_id = db.Column(db.Integer, db.ForeignKey('buyer.id'), nullable=True)
