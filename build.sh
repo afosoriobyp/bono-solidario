@@ -10,4 +10,7 @@ pip install -r requirements.txt
 echo "🗄️  Ejecutando migraciones de base de datos..."
 flask db upgrade heads
 
+echo "👤 Creando usuario admin si no existe..."
+python create_admin_user.py
+
 echo "✅ Build completado exitosamente"
