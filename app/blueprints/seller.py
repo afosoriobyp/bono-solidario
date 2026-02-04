@@ -113,6 +113,8 @@ def sell():
 			mail.send(msg)
 			flash('Se ha enviado un correo al comprador con los datos de la compra.', 'info')
 		except Exception as e:
+			from flask import current_app
+			current_app.logger.exception("Error enviando email de boleta")
 			flash(f'No se pudo enviar el correo al comprador: {str(e)}', 'danger')
 	return render_template('seller/sell.html', raffles=raffles, boletas_por_rifa=boletas_por_rifa, raffles_json=raffles_dict, selected_raffle_id=raffle_id)
 
