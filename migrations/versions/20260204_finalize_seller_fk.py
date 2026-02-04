@@ -1,7 +1,7 @@
 """finalize ticket seller fk: rename seller_data_id -> seller_id and add FK
 
-Revision ID: 20260204_finalize_ticket_seller_fk
-Revises: 20260204_migrate_ticket_seller_fk
+Revision ID: 20260204_finalize_seller_fk
+Revises: 20260204_migrate_seller_fk
 Create Date: 2026-02-04 01:00:00.000000
 
 """
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = '20260204_finalize_ticket_seller_fk'
-down_revision = '20260204_migrate_ticket_seller_fk'
+revision = '20260204_finalize_seller_fk'
+down_revision = '20260204_migrate_seller_fk'
 branch_labels = None
 depends_on = None
 

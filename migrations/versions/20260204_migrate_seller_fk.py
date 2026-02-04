@@ -1,6 +1,6 @@
 """migrate ticket seller fk from user -> seller
 
-Revision ID: 20260204_migrate_ticket_seller_fk
+Revision ID: 20260204_migrate_seller_fk
 Revises: 20260204_add_seller_table
 Create Date: 2026-02-04 00:30:00.000000
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import text
 
 # revision identifiers, used by Alembic.
-revision = '20260204_migrate_ticket_seller_fk'
+revision = '20260204_migrate_seller_fk'
 down_revision = '20260204_add_seller_table'
 branch_labels = None
 depends_on = None
