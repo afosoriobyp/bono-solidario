@@ -141,13 +141,13 @@ En la sección **"Environment"** del Web Service, añade TODAS estas variables:
 ```
 FLASK_APP=run.py
 FLASK_DEBUG=False
-SECRET_KEY=<genera-una-clave-secreta-fuerte>
-DATABASE_URL=<pega-la-URL-interna-de-tu-PostgreSQL>
+SECRET_KEY=<tu-secret-key-generada>
+DATABASE_URL=<tu-database-url-de-render>
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
-MAIL_PASSWORD=qdlu vicv fhgd eqrm
-MAIL_DEFAULT_SENDER=bonos.perpetuosocorro@gmail.com
+MAIL_USERNAME=<tu-email@gmail.com>
+MAIL_PASSWORD=<tu-contraseña-de-aplicacion-gmail>
+MAIL_DEFAULT_SENDER=<tu-email@gmail.com>
 ```
 
 **⚠️ MUY IMPORTANTE - `DATABASE_URL`:**

@@ -55,13 +55,13 @@ git push -u origin main
    ```
    FLASK_APP=run.py
    FLASK_DEBUG=False
-   SECRET_KEY=6120fd6bbd66e4bd898d20a31e6c142517ab69a9a3a2a01f9852696f3025ee22
-   DATABASE_URL=postgresql://usuario:password@dpg-xxxx.oregon-postgres.render.com/bonos_db?sslmode=require
+   SECRET_KEY=<tu-secret-key-generada>
+   DATABASE_URL=<tu-database-url-de-render>
    MAIL_SERVER=smtp.gmail.com
    MAIL_PORT=587
-   MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
-   MAIL_PASSWORD=<password-de-aplicacion-gmail>
-   MAIL_DEFAULT_SENDER=bonos.perpetuosocorro@gmail.com
+   MAIL_USERNAME=<tu-email@gmail.com>
+   MAIL_PASSWORD=<tu-contraseña-de-aplicacion-gmail>
+   MAIL_DEFAULT_SENDER=<tu-email@gmail.com>
    ```
    
    **❌ Si DATABASE_URL está vacía o no existe:**

@@ -60,9 +60,9 @@ SECRET_KEY=<tu-secret-key-generada>
 DATABASE_URL=postgresql://usuario:password@host.render.com/database
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
-MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
+MAIL_USERNAME=<tu-email@gmail.com>
 MAIL_PASSWORD=<tu-password-de-aplicacion-gmail>
-MAIL_DEFAULT_SENDER=bonos.perpetuosocorro@gmail.com
+MAIL_DEFAULT_SENDER=<tu-email@gmail.com>
 ```
 
 ### ⚠️ IMPORTANTE:
