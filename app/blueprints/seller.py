@@ -147,10 +147,17 @@ def dashboard():
 		flash('Acceso denegado', 'danger')
 		return render_template('base.html')
 	from app.models.ticket import Ticket
+	from app.models.raffle import Raffle
 	from app.models.commission import Commission
 	from sqlalchemy import func
 	tickets = Ticket.query.filter_by(seller_id=current_user.id, is_sold=True).all()
 	tickets_sold = len(tickets)
+	total_sold = db.session.query(
+		func.coalesce(func.sum(Raffle.valor), 0)
+	).join(Raffle, Ticket.raffle_id == Raffle.id).filter(
+		Ticket.seller_id == current_user.id,
+		Ticket.is_sold == True
+	).scalar() or 0
 	# Comisiones agrupadas por fecha de venta
 	commissions_by_date = {}
 	for ticket in tickets:
@@ -162,6 +169,7 @@ def dashboard():
 	total_commissions = sum(commissions_by_date.values())
 	stats = {
 		'tickets_sold': tickets_sold,
+		'total_sold': total_sold,
 		'commissions': total_commissions,
 		'commissions_by_date': commissions_by_date
 	}
