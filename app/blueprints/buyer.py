@@ -1,6 +1,7 @@
 
 from flask import Blueprint, render_template, request, flash
 from flask_login import login_required, current_user
+from app import db
 
 buyer_bp = Blueprint('buyer', __name__, url_prefix='/buyer')
 
@@ -64,8 +65,16 @@ def dashboard():
 		return render_template('base.html')
 	from app.models.ticket import Ticket
 	from app.models.prize import Prize
+	from app.models.raffle import Raffle
+	from sqlalchemy import func
 	tickets = Ticket.query.filter_by(buyer_id=current_user.id, is_sold=True).all()
 	tickets_bought = len(tickets)
+	total_paid = db.session.query(
+		func.coalesce(func.sum(Raffle.valor), 0)
+	).select_from(Ticket).join(Raffle, Ticket.raffle_id == Raffle.id).filter(
+		Ticket.buyer_id == current_user.id,
+		Ticket.is_sold == True
+	).scalar() or 0
 	prizes_won = 0
 	prizes_detail = []
 	for ticket in tickets:
@@ -80,6 +89,7 @@ def dashboard():
 			})
 	stats = {
 		'tickets_bought': tickets_bought,
+		'total_paid': total_paid,
 		'prizes_won': prizes_won
 	}
 	return render_template('buyer/dashboard.html', stats=stats, prizes_detail=prizes_detail)
