@@ -137,6 +137,23 @@ sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL stri
 
 ---
 
+### ❌ Error: "psycopg2 undefined symbol _PyInterpreterState_Get"
+
+**Síntoma:**
+```
+ImportError: undefined symbol: _PyInterpreterState_Get
+```
+
+**Solución Rápida:**
+1. Archivos `.python-version` y `runtime.txt` ya creados en el repo
+2. Hacer push: `git push origin main`
+3. Render → "Manual Deploy" → **"Clear build cache & deploy"**
+4. Verificar logs: debe decir "Using Python version 3.11.0"
+
+👉 **Guía detallada:** [ERROR_PSYCOPG2_PYTHON.md](ERROR_PSYCOPG2_PYTHON.md)
+
+---
+
 ### Otros problemas:
 
 1. Revisa logs en Render Dashboard

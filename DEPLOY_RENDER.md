@@ -279,6 +279,24 @@ sqlalchemy.exc.ArgumentError: Could not parse SQLAlchemy URL from given URL stri
 
 ---
 
+### ❌ Error: "psycopg2 undefined symbol _PyInterpreterState_Get"
+
+```
+ImportError: undefined symbol: _PyInterpreterState_Get
+```
+
+**Causa:** Incompatibilidad de `psycopg2` con Python 3.13.
+
+**Solución (Ya aplicada en el repo):**
+1. Archivos `.python-version` y `runtime.txt` creados para forzar Python 3.11
+2. Sube cambios a GitHub
+3. En Render: **Manual Deploy** → **Clear build cache & deploy**
+4. Verifica en logs: "Using Python version 3.11.0"
+
+👉 **Ver guía completa:** [ERROR_PSYCOPG2_PYTHON.md](ERROR_PSYCOPG2_PYTHON.md)
+
+---
+
 ### Error: "Application failed to start"
 - Verifica logs en Render
 - Comprueba que `DATABASE_URL` esté configurado
