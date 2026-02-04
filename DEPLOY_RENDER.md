@@ -297,6 +297,27 @@ ImportError: undefined symbol: _PyInterpreterState_Get
 
 ---
 
+### ❌ Error: "SSL connection has been closed unexpectedly"
+
+```
+psycopg2.OperationalError: SSL connection has been closed unexpectedly
+```
+
+**Causa:** PostgreSQL en Render requiere SSL pero no está configurado en la URL.
+
+**Solución (Ya aplicada en config.py):**
+1. El código ahora agrega automáticamente `?sslmode=require` a URLs de Render
+2. Sube cambios a GitHub
+3. Redeploy automático en Render
+4. Verifica en logs que las migraciones se ejecuten
+
+**Solución Manual (si es necesario):**
+- Agrega `?sslmode=require` al final de `DATABASE_URL` en Render Environment
+
+👉 **Ver guía completa:** [ERROR_SSL_POSTGRES.md](ERROR_SSL_POSTGRES.md)
+
+---
+
 ### Error: "Application failed to start"
 - Verifica logs en Render
 - Comprueba que `DATABASE_URL` esté configurado

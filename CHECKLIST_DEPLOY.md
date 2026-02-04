@@ -154,6 +154,26 @@ ImportError: undefined symbol: _PyInterpreterState_Get
 
 ---
 
+### ❌ Error: "SSL connection has been closed unexpectedly"
+
+**Síntoma:**
+```
+psycopg2.OperationalError: SSL connection has been closed unexpectedly
+```
+
+**Solución Rápida:**
+1. `config.py` ya actualizado para agregar SSL automáticamente
+2. Hacer push: `git push origin main`
+3. Redeploy automático en Render
+4. Verificar logs: migraciones deben ejecutarse correctamente
+
+**Solución Manual (si persiste):**
+- Agregar `?sslmode=require` al final de `DATABASE_URL` en Render Environment
+
+👉 **Guía detallada:** [ERROR_SSL_POSTGRES.md](ERROR_SSL_POSTGRES.md)
+
+---
+
 ### Otros problemas:
 
 1. Revisa logs en Render Dashboard
