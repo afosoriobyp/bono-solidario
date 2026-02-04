@@ -24,12 +24,12 @@ class Config:
             database_url = f"{database_url}{separator}sslmode=require"
         
         SQLALCHEMY_DATABASE_URI = database_url
-        # Opciones de pool solo para PostgreSQL
+        # Con Gunicorn + eventlet worker, usar NullPool para evitar problemas de threading
+        # NullPool crea una nueva conexión para cada request y la cierra al terminar
+        from sqlalchemy.pool import NullPool
         SQLALCHEMY_ENGINE_OPTIONS = {
             'pool_pre_ping': True,
-            'pool_recycle': 300,
-            'pool_size': 10,
-            'max_overflow': 20,
+            'poolclass': NullPool
         }
     else:
         # Fallback para desarrollo local con SQLite
