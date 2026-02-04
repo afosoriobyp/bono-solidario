@@ -1,0 +1,29 @@
+{% extends 'seller/layout.html' %}
+{% block title %}Selecciona una Rifa{% endblock %}
+{% block seller_content %}
+<div class="container mt-4">
+  <h2>Selecciona una rifa para vender boletas</h2>
+  <div class="row">
+    {% for raffle in raffles %}
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm raffle-card" style="cursor:pointer" onclick="window.location.href='/seller/sell?raffle_id={{ raffle.id }}'">
+        {% if raffle.imagen %}
+          {% if raffle.imagen.startswith('http') %}
+            <img src="{{ raffle.imagen }}" class="card-img-top mt-3" alt="Imagen de la rifa" style="max-height:220px; max-width:100%; object-fit:contain;">
+          {% else %}
+            <img src="{{ url_for('static', filename=raffle.imagen) }}" class="card-img-top mt-3" alt="Imagen de la rifa" style="max-height:220px; max-width:100%; object-fit:contain;">
+          {% endif %}
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ raffle.name }}</h5>
+          <p class="card-text mb-1"><strong>Valor:</strong> ${{ raffle.valor }}</p>
+          <p class="card-text mb-1"><strong>Fecha caducidad:</strong> {{ raffle.fecha_caducidad.strftime('%d/%m/%Y') if raffle.fecha_caducidad else 'Sin fecha' }}</p>
+          <p class="card-text mb-1"><strong>Lotería:</strong> {{ raffle.loteria }}</p>
+          <p class="card-text">{{ raffle.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

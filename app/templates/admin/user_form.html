@@ -1,0 +1,38 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Usuario{% endblock %}
+{% block admin_content %}
+<div class="container mt-4">
+  <h2>{{ 'Editar' if user else 'Crear' }} Usuario</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="username" class="form-label">Usuario</label>
+      <input type="text" class="form-control" id="username" name="username" value="{{ user.username if user else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" name="email" value="{{ user.email if user else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="role" class="form-label">Rol</label>
+      <select class="form-select" id="role" name="role" required>
+        <option value="admin" {% if user and user.role=='admin' %}selected{% endif %}>Administrador</option>
+        <option value="seller" {% if user and user.role=='seller' %}selected{% endif %}>Vendedor</option>
+        <option value="buyer" {% if user and user.role=='buyer' %}selected{% endif %}>Comprador</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Contraseña {% if not user %}(requerida){% else %}(dejar en blanco para no cambiar){% endif %}</label>
+      <input type="password" class="form-control" id="password" name="password" {% if not user %}required{% endif %}>
+    </div>
+    <div class="mb-3">
+      <label for="is_active" class="form-label">Activo</label>
+      <select class="form-select" id="is_active" name="is_active">
+        <option value="1" {% if user and user.is_active %}selected{% endif %}>Sí</option>
+        <option value="0" {% if user and not user.is_active %}selected{% endif %}>No</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Gestión de Rifas{% endblock %}
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Rifas</h2>
+  <a href="{{ url_for('admin.create_raffle') }}" class="btn btn-success">Crear Rifa</a>
+</div>
+<form method="get" class="row g-3 mb-3">
+  <div class="col-auto">
+    <input type="text" class="form-control" name="q" placeholder="Buscar por nombre o descripción" value="{{ q if q else '' }}">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </div>
+</form>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th><th>Nombre</th><th>Comisión (%)</th><th>Estado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for raffle in raffles.items %}
+      <tr>
+        <td>{{ raffle.id }}</td>
+        <td>{{ raffle.name }}</td>
+        <td>{{ raffle.commission_pct }}</td>
+        <td>
+          {% if raffle.active %}
+            <span class="badge bg-success">Activo</span>
+          {% else %}
+            <span class="badge bg-danger">Inactiva</span>
+          {% endif %}
+        </td>
+        <td>
+          <a href="{{ url_for('admin.edit_raffle', raffle_id=raffle.id) }}" class="btn btn-primary btn-sm">Editar</a>
+          <a href="{{ url_for('admin.delete_raffle', raffle_id=raffle.id) }}" class="btn btn-danger btn-sm">Eliminar</a>
+          <a href="{{ url_for('admin.raffle_buyers', raffle_id=raffle.id) }}" class="btn btn-info btn-sm">Ver compradores</a>
+          <form method="post" action="{{ url_for('admin.toggle_raffle', raffle_id=raffle.id) }}" style="display:inline;margin-left:6px;">
+            {% if raffle.active %}
+              <button type="submit" class="btn btn-outline-warning btn-sm">Desactivar</button>
+            {% else %}
+              <button type="submit" class="btn btn-outline-success btn-sm">Reactivar</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<nav>
+  <ul class="pagination">
+    {% if raffles.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.raffles', page=raffles.prev_num, q=request.args.get('q','')) }}">Anterior</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Página {{ raffles.page }} de {{ raffles.pages }}</span></li>
+    {% if raffles.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.raffles', page=raffles.next_num, q=request.args.get('q','')) }}">Siguiente</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}

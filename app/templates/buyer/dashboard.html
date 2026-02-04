@@ -1,0 +1,63 @@
+{% extends 'buyer/layout.html' %}
+{% block title %}Dashboard Comprador{% endblock %}
+{% block buyer_content %}
+<div class="container mt-4">
+  <h2>Dashboard Comprador</h2>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card text-bg-primary mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Boletas Compradas</h5>
+          <p class="card-text display-6">{{ stats.tickets_bought }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Premios Ganados</h5>
+          <p class="card-text display-6">{{ stats.prizes_won }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-info mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Total Pagado</h5>
+          <p class="card-text display-6">${{ stats.tickets_bought * stats.valor if stats.valor else 0 }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if prizes_detail %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <h4>Detalle de Premios Ganados</h4>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Premio</th>
+              <th>Descripción</th>
+              <th>Rifa</th>
+              <th>Fecha de Asignación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prize in prizes_detail %}
+            <tr>
+              <td>{{ prize.name }}</td>
+              <td>{{ prize.description }}</td>
+              <td>{{ prize.raffle }}</td>
+              <td>{{ prize.awarded_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

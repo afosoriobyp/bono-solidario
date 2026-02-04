@@ -1,0 +1,38 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Reportes{% endblock %}
+{% block admin_content %}
+<h2>Reportes</h2>
+<form method="GET" class="row g-3 mb-4">
+  <div class="col-auto">
+    <label for="start_date" class="form-label">Fecha inicio</label>
+    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+  </div>
+  <div class="col-auto">
+    <label for="end_date" class="form-label">Fecha final</label>
+    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+  </div>
+  <div class="col-auto align-self-end">
+    <button type="submit" class="btn btn-primary">Filtrar</button>
+  </div>
+</form>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Vendedor</th><th>Boletas Vendidas</th><th>Números Vendidos</th><th>Comisión</th><th>Estado Comisión</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in report_data %}
+      <tr>
+        <td>{{ row.seller }}</td>
+        <td>{{ row.tickets_sold }}</td>
+        <td style="font-size:0.95em; word-break:break-all; max-width:300px;">{{ row.numbers }}</td>
+        <td>{{ row.commission }}</td>
+        <td>{{ row.commission_status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

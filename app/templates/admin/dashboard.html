@@ -1,0 +1,76 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+  <div>
+    <h1 class="h2 mb-1">¡Bienvenido, Administrador!</h1>
+    <p class="lead mb-0">Resumen general de la plataforma de rifas.</p>
+  </div>
+  <div class="d-none d-md-block">
+    <i class="bi bi-graph-up-arrow text-primary" style="font-size:2.5rem;"></i>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-3">
+    <div class="card text-bg-primary mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Boletas Vendidas</h5>
+        <p class="card-text display-6">{{ stats.tickets_sold }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-warning mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Boletas Pendientes</h5>
+        <p class="card-text display-6">{{ stats.tickets_pending }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-success mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Rifas en Juego</h5>
+        <p class="card-text display-6">{{ stats.active_raffles }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-bg-info mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Vendedores Activos</h5>
+        <p class="card-text display-6">{{ stats.active_sellers }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row mt-4">
+  <div class="col-md-12">
+      <canvas id="statsChart" class="small-chart" width="400" height="200"></canvas>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('statsChart').getContext('2d');
+const chartData = {
+  labels: {{ stats.labels|tojson | safe }},
+  datasets: [{
+    label: 'Boletas vendidas por vendedor',
+    data: {{ stats.tickets_by_seller|tojson | safe }},
+    backgroundColor: 'rgba(54, 162, 235, 0.5)'
+  }]
+};
+new Chart(ctx, {
+  type: 'bar',
+  data: chartData
+});
+</script>
+<style>
+.small-chart {
+  max-width: 900px !important;
+  max-height: 500px !important;
+  margin: 0 auto;
+  display: block;
+}
+</style>
+{% endblock %}

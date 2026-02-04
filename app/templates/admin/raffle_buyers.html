@@ -1,0 +1,55 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Compradores de Rifa{% endblock %}
+{% block admin_content %}
+<h2>Compradores de "{{ raffle.name }}"</h2>
+<form method="get" class="row g-3 mb-3">
+  <div class="col-auto">
+    <input type="text" class="form-control" name="q" placeholder="Buscar comprador, email o número" value="{{ request.args.get('q', '') }}">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </div>
+</form>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Comprador</th><th>Email</th><th>Número(s)</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for buyer in buyers.items %}
+      <tr>
+        <td>{{ buyer.name }}</td>
+        <td>{{ buyer.email }}</td>
+        <td>{{ buyer.numbers|join(', ') }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.resend_buyer_email', raffle_id=raffle.id, buyer_id=buyer.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Reenviar correo</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.notify_winner', raffle_id=raffle.id, user_id=buyer.id) }}" style="display:inline;margin-left:6px;">
+            <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('Confirmar notificar a este comprador como ganador?');">Notificar ganador</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<nav>
+  <ul class="pagination">
+    {% if buyers.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.raffle_buyers', raffle_id=raffle.id, page=buyers.prev_num, q=request.args.get('q', '')) }}">Anterior</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Página {{ buyers.page }} de {{ buyers.pages }}</span></li>
+    {% if buyers.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.raffle_buyers', raffle_id=raffle.id, page=buyers.next_num, q=request.args.get('q', '')) }}">Siguiente</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+    {% endif %}
+  </ul>
+</nav>
+<a href="{{ url_for('admin.raffles') }}" class="btn btn-link">Volver a Rifas</a>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse min-vh-100 shadow-sm">
+      <div class="position-sticky pt-3">
+        <div class="text-center mb-4">
+          <img src="https://ui-avatars.com/api/?name=Vendedor&background=198754&color=fff&size=64" class="rounded-circle border border-2" alt="Avatar Seller">
+          <h5 class="mt-2 mb-0">Vendedor</h5>
+          <small class="text-muted">Panel</small>
+        </div>
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'seller.dashboard' %}active fw-bold text-success{% endif %}" href="{{ url_for('seller.dashboard') }}">
+              <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'seller.reports' %}active fw-bold text-success{% endif %}" href="{{ url_for('seller.reports') }}">
+              <i class="bi bi-bar-chart"></i> Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.endpoint == 'seller.sell' %}active fw-bold text-success{% endif %}" href="{{ url_for('seller.sell') }}">
+              <i class="bi bi-cash-coin"></i> Vender
+            </a>
+          </li>
+          <li class="nav-item mt-3">
+            <a class="nav-link text-danger fw-bold" href="{{ url_for('auth.logout') }}">
+              <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </a>
+          </li>
+        </ul>
+        <div class="mt-5 text-center small text-muted">
+          <hr>
+          &copy; {{ now().year }} Bonos Seller
+        </div>
+      </div>
+    </nav>
+    <main class="col-md-9 ms-sm-auto px-md-4" style="padding-left:2rem; padding-top:1.5rem;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="container px-0">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show mt-2" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      <!-- Auto-dismiss handled globally in base.html -->
+      {% block seller_content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

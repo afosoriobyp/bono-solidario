@@ -1,0 +1,18 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Notificaciones{% endblock %}
+{% block admin_content %}
+<div class="container mt-4">
+  <h2>Notificar Ganador</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label for="user_id" class="form-label">ID Usuario</label>
+      <input type="number" class="form-control" id="user_id" name="user_id" required>
+    </div>
+    <div class="mb-3">
+      <label for="message" class="form-label">Mensaje</label>
+      <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Enviar</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'buyer/layout.html' %}
+{% block title %}Comprar Boletas{% endblock %}
+{% block buyer_content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">Rifas Disponibles</h2>
+  <div class="row g-4">
+    {% for raffle in raffles %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ raffle.name }}</h5>
+          <p class="card-text">{{ raffle.description or 'Sin descripción.' }}</p>
+            <p class="card-text">{{ raffle.descripcion or 'Sin descripción.' }}</p>
+            {% if raffle.loteria %}<p class="mb-1"><strong>Lotería:</strong> {{ raffle.loteria }}</p>{% endif %}
+            {% if raffle.fecha_caducidad %}<p class="mb-1"><strong>Vence:</strong> {{ raffle.fecha_caducidad.strftime('%d/%m/%Y') }}</p>{% endif %}
+            {% if raffle.imagen %}<img src="{{ raffle.imagen }}" alt="Imagen de la rifa" class="img-fluid rounded mb-2" style="max-height:120px;">{% endif %}
+          <form method="POST" class="mt-auto">
+            <input type="hidden" name="raffle_id" value="{{ raffle.id }}">
+            <div class="mb-2">
+              <label for="valor_{{ raffle.id }}" class="form-label">Valor de la rifa</label>
+              <input type="text" class="form-control" id="valor_{{ raffle.id }}" name="valor" value="{{ raffle.valor }}" readonly>
+            </div>
+            <div class="mb-2">
+              <label for="boletas_{{ raffle.id }}" class="form-label">Selecciona los números de boleta</label>
+              <select class="form-select" id="boletas_{{ raffle.id }}" name="boletas" multiple required>
+                {% for num in boletas_por_rifa[raffle.id] %}
+                  <option value="{{ num }}">{{ num }}</option>
+                {% endfor %}
+              </select>
+              <small class="form-text text-muted">Puedes seleccionar varios números manteniendo presionada Ctrl o Shift.</small>
+            </div>
+            <div class="mb-2">
+              <label for="payment_method_{{ raffle.id }}" class="form-label">Método de Pago</label>
+              <select class="form-select" id="payment_method_{{ raffle.id }}" name="payment_method" required>
+                <option value="" disabled selected>Seleccione</option>
+                <option value="Nequi">Nequi</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Cuotas">Cuotas</option>
+              </select>
+            </div>
+            <div class="d-grid mt-2">
+              <button type="submit" class="btn btn-primary">Comprar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'seller/layout.html' %}
+{% block title %}Dashboard Vendedor{% endblock %}
+{% block seller_content %}
+<div class="container mt-4">
+  <h2>Dashboard Vendedor</h2>
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card text-bg-primary mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Boletas Vendidas</h5>
+          <p class="card-text display-6">{{ stats.tickets_sold }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Comisiones Obtenidas</h5>
+          <p class="card-text display-6">${{ stats.commissions }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-bg-info mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Total Vendido</h5>
+          <p class="card-text display-6">${{ stats.tickets_sold * stats.valor if stats.valor else 0 }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

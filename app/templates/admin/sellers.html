@@ -1,0 +1,59 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Gestión de Vendedores{% endblock %}
+{% block admin_content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Vendedores</h2>
+  <div>
+    <a href="{{ url_for('admin.create_seller') }}" class="btn btn-success">Crear Vendedor</a>
+    <a href="{{ url_for('admin.export_sellers') }}" class="btn btn-outline-secondary ms-2">Exportar CSV</a>
+  </div>
+</div>
+<form method="get" class="row g-3 mb-3">
+  <div class="col-auto">
+    <input type="text" class="form-control" name="q" placeholder="Buscar por nombre, email o identificación" value="{{ q if q else '' }}">
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+  </div>
+</form>
+<div class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th><th>Nombre</th><th>Email</th><th>Identificación</th><th>Tratamiento</th><th>Estado</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for seller in sellers.items %}
+      <tr>
+        <td>{{ seller.id }}</td>
+        <td>{{ seller.nombre }}</td>
+        <td>{{ seller.email }}</td>
+        <td>{{ seller.identificacion or '' }}</td>
+        <td>{{ 'Sí' if seller.tratamiento_datos else 'No' }}</td>
+        <td>{{ seller.estado }}</td>
+        <td>
+          <a href="{{ url_for('admin.edit_seller', seller_id=seller.id) }}" class="btn btn-primary btn-sm">Editar</a>
+          <a href="{{ url_for('admin.delete_seller', seller_id=seller.id) }}" class="btn btn-danger btn-sm">Eliminar</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<nav>
+  <ul class="pagination">
+    {% if sellers.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.sellers', page=sellers.prev_num, q=request.args.get('q','')) }}">Anterior</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Página {{ sellers.page }} de {{ sellers.pages }}</span></li>
+    {% if sellers.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin.sellers', page=sellers.next_num, q=request.args.get('q','')) }}">Siguiente</a></li>
+    {% else %}
+      <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Comprador{% endblock %}
+{% block admin_content %}
+<div class="container mt-4">
+  <h2>{{ 'Editar' if buyer else 'Crear' }} Comprador</h2>
+  <form method="POST">
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="identificacion" class="form-label">Identificación</label>
+        <input type="text" class="form-control" id="identificacion" name="identificacion" value="{{ buyer_data.identificacion if buyer_data else '' }}">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ buyer_data.nombre if buyer_data else (buyer.username if buyer else '') }}" required>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="direccion" class="form-label">Dirección</label>
+        <input type="text" class="form-control" id="direccion" name="direccion" value="{{ buyer_data.direccion if buyer_data else '' }}">
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="telefono" class="form-label">Teléfono</label>
+        <input type="text" class="form-control" id="telefono" name="telefono" value="{{ buyer_data.telefono if buyer_data else '' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ buyer.email if buyer else (buyer_data.email if buyer_data else '') }}" required>
+      </div>
+      
+    </div>
+    <hr class="my-4 border-3 border-primary rounded-pill" style="opacity:0.5;">
+    <div class="d-flex align-items-center mt-3">
+      <button type="submit" class="btn btn-primary me-2">Guardar</button>
+      <a href="{{ url_for('admin.buyers') }}" class="btn btn-secondary">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'buyer/layout.html' %}
+{% block title %}Reportes Comprador{% endblock %}
+{% block buyer_content %}
+<div class="container mt-4">
+  <h2>Reportes de Compras</h2>
+  <form method="GET" class="row g-3 mb-4">
+    <div class="col-auto">
+      <label for="start_date" class="form-label">Fecha inicio</label>
+      <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.args.get('start_date', '') }}">
+    </div>
+    <div class="col-auto">
+      <label for="end_date" class="form-label">Fecha final</label>
+      <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.args.get('end_date', '') }}">
+    </div>
+    <div class="col-auto align-self-end">
+      <button type="submit" class="btn btn-primary">Filtrar</button>
+    </div>
+  </form>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Fecha</th><th>Boletas Compradas</th><th>Premios Ganados</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in report_data %}
+      <tr>
+        <td>{{ row.date }}</td>
+        <td>{{ row.tickets_bought }}</td>
+        <td>{{ row.prizes_won }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

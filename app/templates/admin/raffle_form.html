@@ -1,0 +1,74 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Rifa{% endblock %}
+{% block admin_content %}
+<div class="container mt-4">
+  <h2>{{ 'Editar' if raffle else 'Crear' }} Rifa</h2>
+  <form method="POST">
+    <div class="row">
+      <div class="mb-3 col-md-4">
+        <label for="name" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ raffle.name if raffle else '' }}" required>
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <textarea class="form-control" id="descripcion" name="descripcion">{{ raffle.descripcion if raffle else '' }}</textarea>
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="fecha_caducidad" class="form-label">Fecha de caducidad</label>
+        <input type="date" class="form-control" id="fecha_caducidad" name="fecha_caducidad" value="{{ raffle.fecha_caducidad.strftime('%Y-%m-%d') if raffle and raffle.fecha_caducidad else '' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="mb-3 col-md-4">
+        <label for="loteria" class="form-label">Lotería</label>
+        <select class="form-select" id="loteria" name="loteria">
+          <option value="">Selecciona una lotería</option>
+          {% for lot in lotteries %}
+            <option value="{{ lot }}" {% if raffle and raffle.loteria == lot %}selected{% endif %}>{{ lot }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="imagen" class="form-label">URL de la imagen</label>
+        <input type="url" class="form-control" id="imagen" name="imagen" value="{{ raffle.imagen if raffle else '' }}">
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="commission_pct" class="form-label">Porcentaje Comisión</label>
+        <input type="number" class="form-control" id="commission_pct" name="commission_pct" value="{{ raffle.commission_pct if raffle else '' }}" min="0" max="100" step="0.01" required>
+      </div>
+    </div>
+    <div class="row">
+      <div class="mb-3 col-md-6">
+        <label for="responsable" class="form-label">Responsable</label>
+        <input type="text" class="form-control" id="responsable" name="responsable" value="{{ raffle.responsable if raffle else '' }}">
+      </div>
+      <div class="mb-3 col-md-6">
+        <label for="telefono" class="form-label">Teléfono</label>
+        <input type="text" class="form-control" id="telefono" name="telefono" value="{{ raffle.telefono if raffle else '' }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="mb-3 col-md-4">
+        <label for="cantidad" class="form-label">Cantidad de Boletas</label>
+        <input type="number" class="form-control" id="cantidad" name="cantidad" value="{{ raffle.cantidad if raffle else '' }}" min="1" required>
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="valor" class="form-label">Valor de la rifa</label>
+        <input type="number" class="form-control" id="valor" name="valor" value="{{ raffle.valor if raffle else '' }}" min="0" step="0.01" required>
+      </div>
+      <div class="mb-3 col-md-4">
+        <label for="numeracion_boletas_disponibles" class="form-label">Rango de numeración de boletas</label>
+        <input type="text" class="form-control" id="numeracion_boletas_disponibles" name="numeracion_boletas_disponibles" value="{{ raffle.numeracion_boletas_disponibles if raffle else '' }}" placeholder="Ej: 0000-9999" required>
+        <small class="form-text text-muted">Formato: inicio-fin, ej. 0000-9999, 000-999, 00-99</small>
+      </div>
+    </div>
+    <hr class="my-4 border-3 border-primary rounded-pill" style="opacity:0.5;">
+    <div class="row">
+      <div class="col-12 d-flex justify-content-start">
+        <button type="submit" class="btn btn-primary me-2">Guardar</button>
+        <a href="{{ url_for('admin.raffles') }}" class="btn btn-secondary">Cancelar</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
