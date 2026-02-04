@@ -24,17 +24,19 @@ class Config:
             database_url = f"{database_url}{separator}sslmode=require"
         
         SQLALCHEMY_DATABASE_URI = database_url
+        # Opciones de pool solo para PostgreSQL
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            'pool_pre_ping': True,
+            'pool_recycle': 300,
+            'pool_size': 10,
+            'max_overflow': 20,
+        }
     else:
-        # Fallback para desarrollo local
+        # Fallback para desarrollo local con SQLite
         SQLALCHEMY_DATABASE_URI = 'sqlite:///bonos.db'
+        SQLALCHEMY_ENGINE_OPTIONS = {}
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,  # Verifica conexiones antes de usarlas
-        'pool_recycle': 300,     # Recicla conexiones cada 5 minutos
-        'pool_size': 10,         # Tamaño del pool de conexiones
-        'max_overflow': 20,      # Conexiones extra permitidas
-    }
     
     # Configuración para Flask-SocketIO
     SOCKETIO_MESSAGE_QUEUE = os.environ.get('SOCKETIO_MESSAGE_QUEUE')
