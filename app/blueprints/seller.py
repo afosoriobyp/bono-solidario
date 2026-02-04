@@ -154,7 +154,7 @@ def dashboard():
 	tickets_sold = len(tickets)
 	total_sold = db.session.query(
 		func.coalesce(func.sum(Raffle.valor), 0)
-	).join(Raffle, Ticket.raffle_id == Raffle.id).filter(
+	).select_from(Ticket).join(Raffle, Ticket.raffle_id == Raffle.id).filter(
 		Ticket.seller_id == current_user.id,
 		Ticket.is_sold == True
 	).scalar() or 0
