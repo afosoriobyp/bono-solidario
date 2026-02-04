@@ -317,7 +317,26 @@ psycopg2.OperationalError: SSL connection has been closed unexpectedly
 👉 **Ver guía completa:** [ERROR_SSL_POSTGRES.md](ERROR_SSL_POSTGRES.md)
 
 ---
+### ❌ Error: "Multiple head revisions are present"
 
+```
+ERROR [flask_migrate] Error: Multiple head revisions are present for given argument 'head'
+```
+
+**Causa:** Alembic tiene múltiples "heads" (ramas divergentes) en migraciones.
+
+**Solución (Ya aplicada en build.sh):**
+1. `build.sh` ahora usa `flask db upgrade heads` (con 's')
+2. Sube cambios a GitHub
+3. Redeploy en Render
+4. Verifica en logs que todas las migraciones se apliquen
+
+**Solución Manual (si persiste):**
+- Crear migración de merge: `flask db merge heads -m "Merge heads"`
+
+👉 **Ver guía completa:** [ERROR_MULTIPLE_HEADS.md](ERROR_MULTIPLE_HEADS.md)
+
+---
 ### Error: "Application failed to start"
 - Verifica logs en Render
 - Comprueba que `DATABASE_URL` esté configurado

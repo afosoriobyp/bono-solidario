@@ -56,7 +56,7 @@ git push -u origin main
    FLASK_APP=run.py
    FLASK_DEBUG=False
    SECRET_KEY=6120fd6bbd66e4bd898d20a31e6c142517ab69a9a3a2a01f9852696f3025ee22
-   DATABASE_URL=postgresql://usuario:password@dpg-xxxx.oregon-postgres.render.com/bonos_db
+   DATABASE_URL=postgresql://usuario:password@dpg-xxxx.oregon-postgres.render.com/bonos_db?sslmode=require
    MAIL_SERVER=smtp.gmail.com
    MAIL_PORT=587
    MAIL_USERNAME=bonos.perpetuosocorro@gmail.com
@@ -171,6 +171,26 @@ psycopg2.OperationalError: SSL connection has been closed unexpectedly
 - Agregar `?sslmode=require` al final de `DATABASE_URL` en Render Environment
 
 👉 **Guía detallada:** [ERROR_SSL_POSTGRES.md](ERROR_SSL_POSTGRES.md)
+
+---
+
+### ❌ Error: "Multiple head revisions are present"
+
+**Síntoma:**
+```
+ERROR [flask_migrate] Error: Multiple head revisions are present for given argument 'head'
+```
+
+**Solución Rápida:**
+1. `build.sh` ya actualizado para usar `flask db upgrade heads`
+2. Hacer push: `git push origin main`
+3. Redeploy en Render
+4. Verificar logs: todas las migraciones deben aplicarse
+
+**Solución Manual (si persiste):**
+- Localmente: `flask db merge heads -m "Merge heads"` y hacer push
+
+👉 **Guía detallada:** [ERROR_MULTIPLE_HEADS.md](ERROR_MULTIPLE_HEADS.md)
 
 ---
 
