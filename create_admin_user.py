@@ -2,12 +2,11 @@
 Script para crear usuario administrador de prueba en producción
 Ejecutar en Render Shell con: python create_admin_user.py
 """
-from app import create_app, db
+from app import app, db
 from app.models.user import User
 from werkzeug.security import generate_password_hash
 
 def create_admin():
-    app = create_app()
     with app.app_context():
         # Verificar si ya existe el admin
         existing = User.query.filter_by(username='admin').first()
