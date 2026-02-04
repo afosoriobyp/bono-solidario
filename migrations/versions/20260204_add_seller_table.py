@@ -24,7 +24,7 @@ def upgrade():
         sa.Column('direccion', sa.String(length=255), nullable=True),
         sa.Column('telefono', sa.String(length=32), nullable=True),
         sa.Column('email', sa.String(length=120), nullable=False),
-        sa.Column('tratamiento_datos', sa.Boolean(), nullable=False, server_default=sa.text('0')),
+        sa.Column('tratamiento_datos', sa.Boolean(), nullable=False, server_default=sa.text('false')),
         sa.Column('estado', sa.String(length=20), nullable=False, server_default='activo')
     )
     # crear índice sobre email
