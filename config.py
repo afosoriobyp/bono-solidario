@@ -17,9 +17,8 @@ class Config:
         if database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
         
-        # Agregar parámetros SSL si no están presentes (requerido por Render PostgreSQL)
-        if 'sslmode' not in database_url and 'render.com' in database_url:
-            # Añadir sslmode=require para conexiones Render
+        # Agregar parámetros SSL si no están presentes (requerido por PostgreSQL en producción)
+        if 'sslmode' not in database_url and database_url.startswith('postgresql://'):
             separator = '&' if '?' in database_url else '?'
             database_url = f"{database_url}{separator}sslmode=require"
         
