@@ -1,8 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
+
+<!-- Navbar superior: solo visible en mobile -->
+<nav class="navbar navbar-dark bg-success d-md-none px-3">
+  <span class="navbar-brand fw-bold">
+    <i class="bi bi-cash-coin"></i> Vendedor
+  </span>
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenuSeller" aria-controls="sidebarMenuSeller" aria-expanded="false" aria-label="Abrir menú">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+</nav>
+
 <div class="container-fluid">
   <div class="row">
-    <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse min-vh-100 shadow-sm">
+    <nav id="sidebarMenuSeller" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse min-vh-100 shadow-sm">
       <div class="position-sticky pt-3">
         <div class="text-center mb-4">
           <img src="https://ui-avatars.com/api/?name=Vendedor&background=198754&color=fff&size=64" class="rounded-circle border border-2" alt="Avatar Seller">
@@ -26,7 +37,7 @@
             </a>
           </li>
           <li class="nav-item mt-3">
-            <a class="nav-link text-danger fw-bold" href="{{ url_for('auth.logout') }}">
+            <a class="nav-link text-danger fw-bold" href="#" data-bs-toggle="modal" data-bs-target="#modalLogout">
               <i class="bi bi-box-arrow-right"></i> Cerrar sesión
             </a>
           </li>
@@ -37,7 +48,7 @@
         </div>
       </div>
     </nav>
-    <main class="col-md-9 ms-sm-auto px-md-4" style="padding-left:2rem; padding-top:1.5rem;">
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 pt-3">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <div class="container px-0">
@@ -50,9 +61,31 @@
           </div>
         {% endif %}
       {% endwith %}
-      <!-- Auto-dismiss handled globally in base.html -->
       {% block seller_content %}{% endblock %}
     </main>
+  </div>
+</div>
+
+<!-- Modal: Confirmar cierre de sesión -->
+<div class="modal fade" id="modalLogout" tabindex="-1" aria-labelledby="modalLogoutLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-body text-center py-4 px-4">
+        <div class="mb-3">
+          <span style="font-size:2.5rem; color:#dc3545;"><i class="bi bi-box-arrow-right"></i></span>
+        </div>
+        <h5 class="fw-bold mb-1">¿Cerrar sesión?</h5>
+        <p class="text-muted small mb-4">Tu sesión actual se cerrará y deberás volver a iniciar sesión.</p>
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+            <i class="bi bi-box-arrow-right me-1"></i> Sí, cerrar sesión
+          </a>
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

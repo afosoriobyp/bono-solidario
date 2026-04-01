@@ -34,14 +34,14 @@
           {% endif %}
         </td>
         <td>
-          <a href="{{ url_for('admin.edit_raffle', raffle_id=raffle.id) }}" class="btn btn-primary btn-sm">Editar</a>
-          <a href="{{ url_for('admin.delete_raffle', raffle_id=raffle.id) }}" class="btn btn-danger btn-sm">Eliminar</a>
-          <a href="{{ url_for('admin.raffle_buyers', raffle_id=raffle.id) }}" class="btn btn-info btn-sm">Ver compradores</a>
-          <form method="post" action="{{ url_for('admin.toggle_raffle', raffle_id=raffle.id) }}" style="display:inline;margin-left:6px;">
+          <a href="{{ url_for('admin.edit_raffle', raffle_id=raffle.id) }}" class="btn btn-primary btn-sm" title="Editar" data-bs-toggle="tooltip"><i class="bi bi-pencil-fill"></i></a>
+          <a href="{{ url_for('admin.delete_raffle', raffle_id=raffle.id) }}" class="btn btn-danger btn-sm" title="Eliminar" data-bs-toggle="tooltip" onclick="return confirm('¿Eliminar esta rifa?');"><i class="bi bi-trash-fill"></i></a>
+          <a href="{{ url_for('admin.raffle_buyers', raffle_id=raffle.id) }}" class="btn btn-info btn-sm" title="Ver compradores" data-bs-toggle="tooltip"><i class="bi bi-people-fill"></i></a>
+          <form method="post" action="{{ url_for('admin.toggle_raffle', raffle_id=raffle.id) }}" style="display:inline;">
             {% if raffle.active %}
-              <button type="submit" class="btn btn-outline-warning btn-sm">Desactivar</button>
+              <button type="submit" class="btn btn-outline-warning btn-sm" title="Desactivar rifa" data-bs-toggle="tooltip"><i class="bi bi-toggle-on"></i></button>
             {% else %}
-              <button type="submit" class="btn btn-outline-success btn-sm">Reactivar</button>
+              <button type="submit" class="btn btn-outline-success btn-sm" title="Reactivar rifa" data-bs-toggle="tooltip"><i class="bi bi-toggle-off"></i></button>
             {% endif %}
           </form>
         </td>

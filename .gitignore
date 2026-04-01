@@ -18,6 +18,12 @@ instance/
 .pytest_cache/
 .tox/
 .idea/
+
+# Scripts con credenciales o datos de prueba — NO commitear
+scripts/create_test_users.py
+scripts/create_admin_user.py
+scripts/create_test_data.py
+scripts/create_test_commissions.py
 .vscode/
 .sublime-project
 .sublime-workspace

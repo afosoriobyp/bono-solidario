@@ -25,10 +25,10 @@
         <td>{{ buyer.numbers|join(', ') }}</td>
         <td>
           <form method="post" action="{{ url_for('admin.resend_buyer_email', raffle_id=raffle.id, buyer_id=buyer.id) }}" style="display:inline;">
-            <button type="submit" class="btn btn-outline-secondary btn-sm">Reenviar correo</button>
+            <button type="submit" class="btn btn-outline-secondary btn-sm" title="Reenviar correo" data-bs-toggle="tooltip"><i class="bi bi-envelope-fill"></i></button>
           </form>
-          <form method="post" action="{{ url_for('admin.notify_winner', raffle_id=raffle.id, user_id=buyer.id) }}" style="display:inline;margin-left:6px;">
-            <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('Confirmar notificar a este comprador como ganador?');">Notificar ganador</button>
+          <form method="post" action="{{ url_for('admin.notify_winner', raffle_id=raffle.id, user_id=buyer.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-outline-success btn-sm" title="Notificar ganador" data-bs-toggle="tooltip" onclick="return confirm('¿Confirmar notificar a este comprador como ganador?');"><i class="bi bi-trophy-fill"></i></button>
           </form>
         </td>
       </tr>

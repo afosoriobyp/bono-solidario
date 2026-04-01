@@ -30,8 +30,8 @@
         <td>{{ buyer.buyer_profile.telefono if buyer.buyer_profile else '' }}</td>
         <td>{{ buyer.email }}</td>
         <td>
-          <a href="{{ url_for('admin.edit_buyer', buyer_id=buyer.id) }}" class="btn btn-primary btn-sm">Editar</a>
-          <a href="{{ url_for('admin.delete_buyer', buyer_id=buyer.id) }}" class="btn btn-danger btn-sm">Eliminar</a>
+          <a href="{{ url_for('admin.edit_buyer', buyer_id=buyer.id) }}" class="btn btn-primary btn-sm" title="Editar" data-bs-toggle="tooltip"><i class="bi bi-pencil-fill"></i></a>
+          <a href="{{ url_for('admin.delete_buyer', buyer_id=buyer.id) }}" class="btn btn-danger btn-sm" title="Eliminar" data-bs-toggle="tooltip" onclick="return confirm('¿Eliminar este comprador?');"><i class="bi bi-trash-fill"></i></a>
         </td>
       </tr>
       {% endfor %}

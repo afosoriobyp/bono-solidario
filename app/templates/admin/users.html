@@ -29,10 +29,10 @@
         <td>{{ user.role }}</td>
         <td>{{ 'Sí' if user.is_active else 'No' }}</td>
         <td>
-          <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-primary btn-sm">Editar</a>
-          <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">Eliminar</a>
+          <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-primary btn-sm" title="Editar" data-bs-toggle="tooltip"><i class="bi bi-pencil-fill"></i></a>
+          <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm" title="Eliminar" data-bs-toggle="tooltip" onclick="return confirm('¿Eliminar este usuario?');"><i class="bi bi-trash-fill"></i></a>
           {% if not user.is_active %}
-          <a href="{{ url_for('admin.activate_user', user_id=user.id) }}" class="btn btn-success btn-sm">Activar</a>
+          <a href="{{ url_for('admin.activate_user', user_id=user.id) }}" class="btn btn-success btn-sm" title="Activar usuario" data-bs-toggle="tooltip"><i class="bi bi-check-circle-fill"></i></a>
           {% endif %}
         </td>
       </tr>
