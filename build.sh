@@ -7,7 +7,4 @@ echo "🔧 Instalando dependencias..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-echo "🗄️  Ejecutando migraciones de base de datos..."
-flask db upgrade heads
-
 echo "✅ Build completado exitosamente"
