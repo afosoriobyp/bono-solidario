@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { r2Configurado } from "@/lib/r2";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 /**
  * Diagnóstico de configuración para producción.
