@@ -66,11 +66,15 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 ### 🔑 Usuarios de prueba (seed)
 
-| Rol        | Email                      | Contraseña    |
-|------------|----------------------------|---------------|
-| Admin      | admin@bonosolidario.com    | admin123      |
-| Vendedor   | vendedor@bonosolidario.com | vendedor123   |
-| Usuario    | cliente@bonosolidario.com  | cliente123    |
+El script `npm run seed` crea 3 usuarios demo con **contraseñas aleatorias generadas en cada ejecución**:
+
+| Rol        | Email                      |
+|------------|----------------------------|
+| Admin      | admin@bonosolidario.com    |
+| Vendedor   | vendedor@bonosolidario.com |
+| Usuario    | cliente@bonosolidario.com  |
+
+Al ejecutarlo, las contraseñas se imprimen **una sola vez** en la consola (guárdalas). Nunca se incluyen en el código ni en el repositorio. Si necesitas restablecerlas, vuelve a ejecutar `npm run seed` (esto **borra y recrea** bonos, ventas y usuarios demo).
 
 ## ⚙️ Variables de entorno
 

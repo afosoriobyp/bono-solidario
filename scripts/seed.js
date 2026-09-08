@@ -13,18 +13,21 @@
 
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Carga manual de .env.local si no está en el entorno
+// Carga manual de .env / .env.local si no están en el entorno
 function loadEnv() {
-  const envPath = path.join(__dirname, "..", ".env.local");
-  if (fs.existsSync(envPath)) {
-    const lines = fs.readFileSync(envPath, "utf8").split("\n");
-    for (const line of lines) {
-      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
-      if (match && !process.env[match[1]]) {
-        process.env[match[1]] = match[2];
+  for (const name of [".env", ".env.local"]) {
+    const envPath = path.join(__dirname, "..", name);
+    if (fs.existsSync(envPath)) {
+      const lines = fs.readFileSync(envPath, "utf8").split("\n");
+      for (const line of lines) {
+        const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
+        if (match && process.env[match[1]] === undefined) {
+          process.env[match[1]] = match[2];
+        }
       }
     }
   }
@@ -163,33 +166,34 @@ async function run() {
   // Limpiar colecciones (solo datos de seed)
   await Promise.all([User.deleteMany({}), Bono.deleteMany({}), Venta.deleteMany({})]);
 
-  // Usuarios
-  const admin = await User.create({
-    nombre: "Administrador",
-    email: "admin@bonosolidario.com",
-    password: await bcrypt.hash("admin123", 10),
-    rol: "admin"
-  });
+  // ─── Usuarios con contraseñas aleatorias ──────────────────────
+  const credenciales = {};
 
-  const vendedor = await User.create({
-    nombre: "Vendedor Demo",
-    email: "vendedor@bonosolidario.com",
-    password: await bcrypt.hash("vendedor123", 10),
-    rol: "vendedor"
-  });
+  async function crearUsuario(nombre, email, rol) {
+    const password = crypto.randomBytes(6).toString("base64url"); // ~8 caracteres seguros
+    const user = await User.create({
+      nombre,
+      email,
+      password: await bcrypt.hash(password, 10),
+      rol
+    });
+    credenciales[email] = password;
+    return user;
+  }
 
-  const cliente = await User.create({
-    nombre: "Cliente Demo",
-    email: "cliente@bonosolidario.com",
-    password: await bcrypt.hash("cliente123", 10),
-    rol: "usuario",
-    telefono: "+57 300 000 0000"
-  });
+  const admin = await crearUsuario("Administrador", "admin@bonosolidario.com", "admin");
+  const vendedor = await crearUsuario("Vendedor Demo", "vendedor@bonosolidario.com", "vendedor");
+  const cliente = await crearUsuario(
+    "Cliente Demo",
+    "cliente@bonosolidario.com",
+    "usuario"
+  );
 
-  console.log("Usuarios creados:");
-  console.log("  admin@bonosolidario.com / admin123  (admin)");
-  console.log("  vendedor@bonosolidario.com / vendedor123  (vendedor)");
-  console.log("  cliente@bonosolidario.com / cliente123  (usuario)");
+  console.log("Usuarios creados (contraseñas aleatorias generadas):");
+  for (const [email, pwd] of Object.entries(credenciales)) {
+    console.log(`  ${email} / ${pwd}`);
+  }
+  console.log("  (Guárdalas; solo se muestran en esta ejecución del seed.)");
 
   // Bonos
   const bonos = [];
