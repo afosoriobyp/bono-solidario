@@ -6,7 +6,13 @@ import BonoCard from "@/components/bonos/BonoCard";
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const { bonos } = await listarBonos({ soloActivos: true, limit: 8 });
+  let bonos: any[] = [];
+  try {
+    const data = await listarBonos({ soloActivos: true, limit: 8 });
+    bonos = data.bonos;
+  } catch (e) {
+    console.error("Error cargando bonos:", e instanceof Error ? e.message : e);
+  }
 
   return (
     <div>
