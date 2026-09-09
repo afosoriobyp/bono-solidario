@@ -32,6 +32,18 @@ export default function CarritoPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // "Efectivo" solo disponible para admin y vendedor (los usuarios no lo ven)
+  const esStaff =
+    session?.user?.rol === "admin" || session?.user?.rol === "vendedor";
+
+  const metodosPago = [
+    { id: "transferencia", icono: Building2, label: "Transferencia bancaria" },
+    { id: "tarjeta", icono: CreditCard, label: "Tarjeta de crédito/débito" }
+  ];
+  if (esStaff) {
+    metodosPago.push({ id: "efectivo", icono: Banknote, label: "Efectivo (punto de venta)" });
+  }
+
   const [metodoPago, setMetodoPago] = useState("transferencia");
   const [confirmando, setConfirmando] = useState(false);
   const [datosBanco, setDatosBanco] = useState<Record<string, string>>({});
@@ -254,11 +266,7 @@ export default function CarritoPage() {
           <div className="card mt-6 p-6">
             <h2 className="text-lg font-semibold text-slate-900">Método de pago</h2>
             <div className="mt-4 space-y-3">
-              {[
-                { id: "transferencia", icono: Building2, label: "Transferencia bancaria" },
-                { id: "tarjeta", icono: CreditCard, label: "Tarjeta de crédito/débito" },
-                { id: "efectivo", icono: Banknote, label: "Efectivo (punto de venta)" }
-              ].map((m) => {
+              {metodosPago.map((m) => {
                 const Icono = m.icono;
                 return (
                   <label

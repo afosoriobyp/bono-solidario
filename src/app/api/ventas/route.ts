@@ -12,7 +12,7 @@ import User from "@/models/User";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { crearVentaSchema } from "@/utils/validations";
-import { unauthorized, apiError, getErrorMessage } from "@/lib/api";
+import { unauthorized, forbidden, apiError, getErrorMessage } from "@/lib/api";
 
 export const maxDuration = 60;
 
@@ -28,6 +28,14 @@ export async function POST(req: NextRequest) {
         { error: parsed.error.issues[0]?.message || "Datos inválidos" },
         { status: 400 }
       );
+    }
+
+    // "Efectivo" solo permitido para admin/vendedor
+    if (
+      parsed.data.metodoPago === "efectivo" &&
+      !["admin", "vendedor"].includes(session.user.rol || "")
+    ) {
+      return forbidden();
     }
 
     await connectDB();
