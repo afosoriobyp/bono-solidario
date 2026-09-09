@@ -17,6 +17,7 @@ type Venta = {
   metodoPago?: string;
   fechaVenta: string;
   usuario?: { nombre?: string; email?: string } | string;
+  datosComprador?: { nombre?: string; email?: string; telefono?: string };
   bonos: { titulo?: string; cantidad: number; precioUnitario: number; bonoId?: any }[];
 };
 
@@ -90,8 +91,10 @@ export default function VentasTable({
     }
   }
 
-  const nombreUsuario = (v: Venta) =>
-    typeof v.usuario === "object" && v.usuario ? v.usuario.nombre || v.usuario.email : "Cliente";
+  const nombreUsuario = (v: Venta) => {
+    if (v.datosComprador?.nombre) return v.datosComprador.nombre;
+    return typeof v.usuario === "object" && v.usuario ? v.usuario.nombre || v.usuario.email : "Cliente";
+  };
 
   return (
     <div>

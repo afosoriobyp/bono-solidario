@@ -48,6 +48,13 @@ export const crearVentaSchema = z.object({
     .min(1, "Debe agregar al menos un bono"),
   metodoPago: z.enum(["transferencia", "tarjeta", "efectivo"]).optional(),
   comprobantePago: z.string().optional().nullable(),
+  datosComprador: z
+    .object({
+      nombre: z.string().min(2, "Ingrese el nombre del comprador").optional(),
+      email: z.string().email("Email del comprador inválido").optional(),
+      telefono: z.string().optional()
+    })
+    .optional(),
   datosTransferencia: z
     .object({
       banco: z.string().optional(),

@@ -49,6 +49,11 @@ export default function CarritoPage() {
   const [datosBanco, setDatosBanco] = useState<Record<string, string>>({});
   const [ventaPendiente, setVentaPendiente] = useState<VentaPendiente | null>(null);
   const [exito, setExito] = useState(false);
+  const [comprador, setComprador] = useState({
+    nombre: session?.user?.name || "",
+    email: session?.user?.email || "",
+    telefono: ""
+  });
 
   useEffect(() => {
     fetch("/api/config")
@@ -90,6 +95,10 @@ export default function CarritoPage() {
       router.push("/login");
       return;
     }
+    if (esStaff && (!comprador.nombre.trim() || !comprador.email.trim())) {
+      toast("Ingresa el nombre y email del comprador", "info");
+      return;
+    }
 
     setConfirmando(true);
     try {
@@ -98,7 +107,15 @@ export default function CarritoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((i) => ({ bonoId: i.bonoId, cantidad: i.cantidad })),
-          metodoPago
+          metodoPago,
+          // Staff registra venta a nombre del comprador real
+          datosComprador: esStaff
+            ? {
+                nombre: comprador.nombre || undefined,
+                email: comprador.email || undefined,
+                telefono: comprador.telefono || undefined
+              }
+            : undefined
         })
       });
 
@@ -326,6 +343,47 @@ export default function CarritoPage() {
               </div>
             )}
           </div>
+
+          {/* Datos del comprador (solo admin/vendedor) */}
+          {esStaff && (
+            <div className="card mt-6 p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Datos del comprador</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Como {session?.user?.rol === "admin" ? "administrador" : "vendedor"}, puedes registrar
+                la venta a nombre del comprador real. La confirmación se enviará a su correo.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="label">Nombre *</label>
+                  <input
+                    value={comprador.nombre}
+                    onChange={(e) => setComprador((p) => ({ ...p, nombre: e.target.value }))}
+                    className="input"
+                    placeholder="Nombre del comprador"
+                  />
+                </div>
+                <div>
+                  <label className="label">Email *</label>
+                  <input
+                    type="email"
+                    value={comprador.email}
+                    onChange={(e) => setComprador((p) => ({ ...p, email: e.target.value }))}
+                    className="input"
+                    placeholder="correo@comprador.com"
+                  />
+                </div>
+                <div>
+                  <label className="label">Teléfono</label>
+                  <input
+                    value={comprador.telefono}
+                    onChange={(e) => setComprador((p) => ({ ...p, telefono: e.target.value }))}
+                    className="input"
+                    placeholder="+57 300 000 0000"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Resumen */}

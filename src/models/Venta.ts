@@ -5,6 +5,11 @@ export interface IVenta {
   _id?: mongoose.Types.ObjectId;
   ordenId: string;
   usuario: mongoose.Types.ObjectId;
+  datosComprador?: {
+    nombre?: string;
+    email?: string;
+    telefono?: string;
+  };
   bonos: {
     bonoId: mongoose.Types.ObjectId;
     titulo?: string;
@@ -45,6 +50,11 @@ const VentaSchema = new Schema<IVenta>(
     },
     metodoPago: { type: String, enum: Object.values(METODOS_PAGO) },
     comprobantePago: { type: String },
+    datosComprador: {
+      nombre: String,
+      email: String,
+      telefono: String
+    },
     datosTransferencia: {
       banco: String,
       numeroCuenta: String,

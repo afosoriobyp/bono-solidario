@@ -10,6 +10,7 @@ export interface ItemVenta {
 }
 
 export type VentaPopulada = IVenta & {
+  datosComprador?: { nombre?: string; email?: string; telefono?: string };
   usuario?: { _id: string; nombre?: string; email?: string } | string;
   bonos: (IVenta["bonos"][number] & { bonoId: any })[];
 };
@@ -21,6 +22,11 @@ export async function crearVenta(data: {
   estado?: string;
   fechaPago?: Date | null;
   comprobantePago?: string;
+  datosComprador?: {
+    nombre?: string;
+    email?: string;
+    telefono?: string;
+  };
   datosTransferencia?: {
     banco?: string;
     numeroCuenta?: string;
@@ -54,6 +60,7 @@ export async function crearVenta(data: {
   const venta = await Venta.create({
     ordenId: generateOrderId(),
     usuario: data.usuario,
+    datosComprador: data.datosComprador,
     bonos: bonosVenta,
     total,
     estado: data.estado,

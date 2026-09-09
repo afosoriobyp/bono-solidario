@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       items: parsed.data.items,
       metodoPago: parsed.data.metodoPago,
       comprobantePago: parsed.data.comprobantePago || undefined,
+      datosComprador: parsed.data.datosComprador,
       datosTransferencia: parsed.data.datosTransferencia,
       // Efectivo en punto de venta se considera pagado al momento
       estado: parsed.data.metodoPago === "efectivo" ? "pagado" : undefined,
@@ -79,10 +80,16 @@ export async function POST(req: NextRequest) {
     const usuario = usuarioRaw as unknown as { nombre?: string; email?: string } | null;
     const ventaLean = venta.toObject();
 
+    // Prioridad: datos del comprador registrados (staff) > datos de la sesión
+    const comprador = ventaLean.datosComprador || {};
+    const nombreComprador = comprador.nombre || usuario?.nombre || session.user.name || "Cliente";
+    const emailComprador =
+      comprador.email || usuario?.email || session.user.email || "";
+
     const notifData = {
       ordenId: ventaLean.ordenId,
-      nombreUsuario: usuario?.nombre || session.user.name || "Cliente",
-      emailUsuario: usuario?.email || session.user.email || "",
+      nombreUsuario: nombreComprador,
+      emailUsuario: emailComprador,
       items: ventaLean.bonos.map((b: any) => ({
         titulo: b.titulo,
         cantidad: b.cantidad,
