@@ -6,7 +6,7 @@ export interface ICarrito {
   items: {
     _id?: mongoose.Types.ObjectId;
     bonoId: mongoose.Types.ObjectId | string;
-    numero?: string | null;
+    numeros: string[];
     cantidad: number;
   }[];
   fechaActualizacion: Date;
@@ -17,8 +17,8 @@ const CarritoSchema = new Schema<ICarrito>({
 items: [
       {
         bonoId: { type: Schema.Types.ObjectId, ref: "Bono", required: true },
-        numero: { type: String },
-        cantidad: { type: Number, default: 1, min: 1 }
+        numeros: { type: [String], default: [] },
+        cantidad: { type: Number, default: 1, min: 0 }
       }
     ],
   fechaActualizacion: { type: Date, default: Date.now }

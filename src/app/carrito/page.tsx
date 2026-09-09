@@ -20,6 +20,7 @@ import { useCarrito } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Spinner } from "@/components/ui/Spinner";
 import PasoComprobante from "@/components/carrito/PasoComprobante";
+import NumeroSelector from "@/components/carrito/NumeroSelector";
 import { formatCurrency, numerosDisponibles } from "@/utils/helpers";
 
 type VentaPendiente = { id: string; ordenId: string; metodoPago: string };
@@ -27,7 +28,7 @@ type VentaPendiente = { id: string; ordenId: string; metodoPago: string };
 const STORAGE_KEY = "ventaPendiente";
 
 export default function CarritoPage() {
-  const { items, subtotal, actualizarCantidad, actualizarNumero, eliminar, vaciar } = useCarrito();
+  const { items, subtotal, actualizarCantidad, setNumeros, eliminar, vaciar } = useCarrito();
   const { data: session, status } = useSession();
   const { toast } = useToast();
   const router = useRouter();
@@ -132,10 +133,10 @@ export default function CarritoPage() {
       toast("Ingresa el nombre y email del comprador", "info");
       return;
     }
-    // Bonos con numeración: cada uno requiere un número disponible seleccionado
-    const sinNumero = items.find((i) => i.numeracion && !i.numero);
+    // Bonos con numeración: cada uno requiere al menos un número seleccionado
+    const sinNumero = items.find((i) => i.numeracion && (i.numeros || []).length === 0);
     if (sinNumero) {
-      toast(`Selecciona un número para "${sinNumero.titulo}"`, "info");
+      toast(`Selecciona al menos un número para "${sinNumero.titulo}"`, "info");
       return;
     }
 
@@ -145,11 +146,11 @@ export default function CarritoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({
-            bonoId: i.bonoId,
-            cantidad: i.cantidad,
-            numero: i.numero || undefined
-          })),
+          items: items.flatMap((i) =>
+            i.numeracion
+              ? (i.numeros || []).map((n) => ({ bonoId: i.bonoId, cantidad: 1, numero: n }))
+              : [{ bonoId: i.bonoId, cantidad: i.cantidad }]
+          ),
           metodoPago,
           // Staff registra venta a nombre del comprador real
           datosComprador: esStaff
@@ -288,24 +289,13 @@ export default function CarritoPage() {
                     <p className="font-medium text-slate-900">{item.titulo}</p>
                     <p className="text-sm text-slate-500">{formatCurrency(item.valor || 0)} c/u</p>
                     {item.numeracion ? (
-                      <div className="mt-2">
-                        <label className="label">Número del bono *</label>
-                        <select
-                          value={item.numero || ""}
-                          onChange={(e) => actualizarNumero(item.bonoId, e.target.value || null)}
-                          className="input w-48"
-                        >
-                          <option value="">Selecciona un número</option>
-                          {(numerosMap[item.bonoId] || []).map((n) => (
-                            <option key={n} value={n}>
-                              {n}
-                            </option>
-                          ))}
-                        </select>
-                        {(numerosMap[item.bonoId] || []).length === 0 && (
-                          <p className="mt-1 text-xs text-red-600">No quedan números disponibles.</p>
-                        )}
-                      </div>
+                      <NumeroSelector
+                        bonoId={item.bonoId}
+                        titulo={item.titulo || "bono"}
+                        numeros={item.numeros || []}
+                        disponibles={numerosMap[item.bonoId] || []}
+                        onChange={(numeros) => setNumeros(item.bonoId, numeros)}
+                      />
                     ) : (
                       <div className="mt-2 flex items-center gap-2">
                         <button
@@ -328,7 +318,10 @@ export default function CarritoPage() {
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-slate-900">
-                      {formatCurrency((item.valor || 0) * item.cantidad)}
+                      {formatCurrency(
+                        (item.valor || 0) *
+                          (item.numeracion ? (item.numeros || []).length : item.cantidad)
+                      )}
                     </p>
                     <button
                       onClick={() => eliminar(item.bonoId)}

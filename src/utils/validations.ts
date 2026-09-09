@@ -69,6 +69,7 @@ export const crearVentaSchema = z.object({
 
 export const carritoItemSchema = z.object({
   bonoId: z.string().min(1),
+  numeros: z.array(z.string()).optional(),
   numero: z.string().optional().nullable(),
   cantidad: z.coerce.number().int().min(1).default(1)
 });

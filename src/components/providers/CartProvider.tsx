@@ -11,7 +11,7 @@ export type CarritoItem = {
   imagen?: string;
   stock?: number | null;
   numeracion?: string | null;
-  numero?: string | null;
+  numeros?: string[];
 };
 
 type CarritoContextType = {
@@ -24,7 +24,7 @@ type CarritoContextType = {
   cerrar: () => void;
   agregar: (bono: CarritoItem) => Promise<void>;
   actualizarCantidad: (bonoId: string, cantidad: number) => Promise<void>;
-  actualizarNumero: (bonoId: string, numero: string | null) => Promise<void>;
+  setNumeros: (bonoId: string, numeros: string[]) => Promise<void>;
   eliminar: (bonoId: string) => Promise<void>;
   vaciar: () => Promise<void>;
 };
@@ -37,16 +37,28 @@ export function useCarrito() {
   return ctx;
 }
 
+function cantidadEfectiva(item: CarritoItem): number {
+  return item.numeracion ? (item.numeros || []).length : item.cantidad;
+}
+
+function normalizarItem(i: CarritoItem & { numero?: string | null }): CarritoItem {
+  if (i.numeracion && !Array.isArray(i.numeros)) {
+    return { ...i, numeros: i.numero ? [String(i.numero)] : [] };
+  }
+  return i;
+}
+
 function mapearItem(i: any): CarritoItem {
+  const numeros = i.numeros || (i.numero ? [i.numero] : []);
   return {
     bonoId: i.bonoId._id.toString(),
-    cantidad: i.cantidad,
+    cantidad: i.cantidad || 0,
     titulo: i.bonoId.titulo,
     valor: i.bonoId.valor,
     imagen: i.bonoId.imagen,
     stock: i.bonoId.stock ?? null,
     numeracion: i.bonoId.numeracion ?? null,
-    numero: i.numero ?? null
+    numeros: i.bonoId.numeracion ? numeros : undefined
   };
 }
 
@@ -80,8 +92,8 @@ export default function CartProvider({ children }: { children: React.ReactNode }
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   bonoId: item.bonoId,
-                  cantidad: item.cantidad,
-                  numero: item.numero || undefined
+                  cantidad: item.cantidad || 1,
+                  numeros: item.numeracion ? item.numeros || [] : undefined
                 })
               }).catch(() => {});
             }
@@ -104,7 +116,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       } catch {
         parsed = [];
       }
-      setItems(parsed);
+      setItems(parsed.map(normalizarItem));
 
       // Enriquecer items antiguos sin datos del bono (titulo/valor/imagen/numeracion)
       const faltantes = parsed.filter((i) => i.valor == null || !i.titulo || i.numeracion == null);
@@ -145,13 +157,21 @@ export default function CartProvider({ children }: { children: React.ReactNode }
 
   const agregar = useCallback(
     async (bono: CarritoItem) => {
+      // Bono numerado ya presente: no duplicar (los números se eligen en el carrito)
+      if (bono.numeracion && items.some((i) => i.bonoId === bono.bonoId && i.numeracion)) {
+        return;
+      }
       setCargando(true);
       try {
         if (session?.user?.id) {
           const res = await fetch("/api/carrito", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bonoId: bono.bonoId, cantidad: bono.cantidad || 1 })
+            body: JSON.stringify({
+              bonoId: bono.bonoId,
+              cantidad: bono.cantidad || 1,
+              numeros: bono.numeracion ? bono.numeros || [] : undefined
+            })
           });
           if (!res.ok) throw new Error("No se pudo agregar");
           const data = await res.json();
@@ -160,22 +180,22 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           setItems((prev) => {
             const existente = prev.find((i) => i.bonoId === bono.bonoId);
             if (existente) {
-              // Bonos numerados: siempre 1 unidad (cada número es único)
-              const cantidad = bono.numeracion ? 1 : existente.cantidad + (bono.cantidad || 1);
+              if (existente.numeracion) {
+                // Bono numerado: mantiene placeholder (los números se eligen en el carrito)
+                return prev;
+              }
               return prev.map((i) =>
-                i.bonoId === bono.bonoId
-                  ? { ...i, cantidad, numeracion: i.numeracion ?? bono.numeracion ?? null }
-                  : i
+                i.bonoId === bono.bonoId ? { ...i, cantidad: i.cantidad + (bono.cantidad || 1) } : i
               );
             }
-            return [...prev, { ...bono, cantidad: bono.cantidad || 1 }];
+            return [...prev, normalizarItem({ ...bono, cantidad: bono.cantidad || 1 })];
           });
         }
       } finally {
         setCargando(false);
       }
     },
-    [session?.user?.id]
+    [session?.user?.id, items]
   );
 
   const actualizarCantidad = useCallback(
@@ -206,15 +226,15 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     [session?.user?.id]
   );
 
-  const actualizarNumero = useCallback(
-    async (bonoId: string, numero: string | null) => {
+  const setNumeros = useCallback(
+    async (bonoId: string, numeros: string[]) => {
       if (session?.user?.id) {
         setCargando(true);
         try {
           const res = await fetch("/api/carrito", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bonoId, numero })
+            body: JSON.stringify({ bonoId, numeros })
           });
           if (!res.ok) throw new Error();
           const data = await res.json();
@@ -224,7 +244,9 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           setCargando(false);
         }
       } else {
-        setItems((prev) => prev.map((i) => (i.bonoId === bonoId ? { ...i, numero } : i)));
+        setItems((prev) =>
+          prev.map((i) => (i.bonoId === bonoId ? { ...i, numeros } : i))
+        );
       }
     },
     [session?.user?.id]
@@ -256,8 +278,8 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     setItems([]);
   }, [session?.user?.id]);
 
-  const totalItems = items.reduce((s, i) => s + i.cantidad, 0);
-  const subtotal = items.reduce((s, i) => s + (i.valor || 0) * i.cantidad, 0);
+  const totalItems = items.reduce((s, i) => s + cantidadEfectiva(i), 0);
+  const subtotal = items.reduce((s, i) => s + (i.valor || 0) * cantidadEfectiva(i), 0);
 
   const value = useMemo(
     () => ({
@@ -270,7 +292,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       cerrar: () => setAbierto(false),
       agregar,
       actualizarCantidad,
-      actualizarNumero,
+      setNumeros,
       eliminar,
       vaciar
     }),
@@ -282,7 +304,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       cargando,
       agregar,
       actualizarCantidad,
-      actualizarNumero,
+      setNumeros,
       eliminar,
       vaciar
     ]

@@ -40,13 +40,17 @@ export async function POST(req: NextRequest) {
     );
 
     if (item) {
-      item.cantidad += parsed.data.cantidad;
-      if (parsed.data.numero) item.numero = parsed.data.numero;
+      if (parsed.data.numeros) {
+        item.numeros = parsed.data.numeros;
+        item.cantidad = 0;
+      } else {
+        item.cantidad += parsed.data.cantidad;
+      }
     } else {
       carrito.items.push({
         bonoId: parsed.data.bonoId,
-        cantidad: parsed.data.cantidad,
-        numero: parsed.data.numero || undefined
+        numeros: parsed.data.numeros || [],
+        cantidad: parsed.data.numeros ? 0 : parsed.data.cantidad
       });
     }
 
@@ -76,16 +80,19 @@ export async function PATCH(req: NextRequest) {
 
     if (!item) return Response.json({ error: "Item no está en el carrito" }, { status: 404 });
 
-    const cantidad = parsed.data.cantidad ?? item.cantidad;
-    if (parsed.data.numero !== undefined) {
-      item.numero = parsed.data.numero;
-    }
-    if (cantidad <= 0) {
-      carrito.items = carrito.items.filter(
-        (i: any) => i.bonoId._id.toString() !== parsed.data.bonoId
-      );
+    // Actualizar números de un bono numerado
+    if (parsed.data.numeros !== undefined) {
+      item.numeros = parsed.data.numeros;
+      item.cantidad = 0;
     } else {
-      item.cantidad = cantidad;
+      const cantidad = parsed.data.cantidad ?? item.cantidad;
+      if (cantidad <= 0) {
+        carrito.items = carrito.items.filter(
+          (i: any) => i.bonoId._id.toString() !== parsed.data.bonoId
+        );
+      } else {
+        item.cantidad = cantidad;
+      }
     }
 
     carrito.fechaActualizacion = new Date();

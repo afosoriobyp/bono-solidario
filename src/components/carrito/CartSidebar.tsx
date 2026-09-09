@@ -72,7 +72,9 @@ export default function CartSidebar() {
                       <div className="mt-2 flex items-center justify-between">
                         {item.numeracion ? (
                           <span className="text-xs text-slate-500">
-                            Número: {item.numero || "por elegir"} · 1 unidad
+                            {item.numeros && item.numeros.length > 0
+                              ? `Números: ${item.numeros.join(", ")}`
+                              : "Números: por elegir"}
                           </span>
                         ) : (
                           <div className="flex items-center gap-2">
@@ -94,7 +96,12 @@ export default function CartSidebar() {
                           </div>
                         )}
                         <p className="text-sm font-semibold text-slate-900">
-                          {formatCurrency((item.valor || 0) * item.cantidad)}
+                          {formatCurrency(
+                            (item.valor || 0) *
+                              (item.numeracion
+                                ? (item.numeros || []).length
+                                : item.cantidad)
+                          )}
                         </p>
                       </div>
                     </div>
