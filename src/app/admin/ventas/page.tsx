@@ -12,7 +12,7 @@ export default async function AdminVentasPage() {
 
   return (
     <DashboardShell rol="admin">
-      <VentasTable endpoint="/api/admin/ventas" admin />
+      <VentasTable endpoint="/api/admin/ventas" />
     </DashboardShell>
   );
 }
