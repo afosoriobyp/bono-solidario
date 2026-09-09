@@ -50,8 +50,8 @@ export default function CarritoPage() {
   const [ventaPendiente, setVentaPendiente] = useState<VentaPendiente | null>(null);
   const [exito, setExito] = useState(false);
   const [comprador, setComprador] = useState({
-    nombre: session?.user?.name || "",
-    email: session?.user?.email || "",
+    nombre: "",
+    email: "",
     telefono: ""
   });
 
