@@ -1,10 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  FileCheck,
+  FileText,
+  ExternalLink
+} from "lucide-react";
 import { FullSpinner } from "@/components/ui/Spinner";
 import EmptyState from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
+import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/providers/ToastProvider";
 import { formatCurrency, formatDate } from "@/utils/helpers";
 import { classNames } from "@/utils/helpers";
@@ -16,14 +26,32 @@ type Venta = {
   estado: string;
   metodoPago?: string;
   fechaVenta: string;
+  comprobantePago?: string;
   usuario?: { nombre?: string; email?: string } | string;
-  bonos: { titulo?: string; cantidad: number; precioUnitario: number; bonoId?: any }[];
+  datosComprador?: { nombre?: string; email?: string; telefono?: string };
+  bonos: { titulo?: string; numero?: string | null; cantidad: number; precioUnitario: number; bonoId?: any }[];
+};
+
+type VentaDetalle = Venta & {
+  datosTransferencia?: {
+    banco?: string;
+    numeroCuenta?: string;
+    titular?: string;
+    referencia?: string;
+  };
+  fechaPago?: string | null;
 };
 
 const estadoBadge: Record<string, "green" | "red" | "slate" | "amber"> = {
   pendiente: "amber",
   pagado: "green",
   cancelado: "red"
+};
+
+const estadoLabel: Record<string, string> = {
+  pendiente: "Pendiente",
+  pagado: "Pagado",
+  cancelado: "Cancelado"
 };
 
 const metodoLabel: Record<string, string> = {
@@ -34,19 +62,19 @@ const metodoLabel: Record<string, string> = {
 
 const LIMIT = 10;
 
-export default function VentasTable({
-  endpoint,
-  admin = false
-}: {
-  endpoint: string;
-  admin?: boolean;
-}) {
+function esPdf(url?: string): boolean {
+  return url?.toLowerCase().endsWith(".pdf") ?? false;
+}
+
+export default function VentasTable({ endpoint }: { endpoint: string }) {
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [cargando, setCargando] = useState(true);
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [detalle, setDetalle] = useState<VentaDetalle | null>(null);
+  const [cargandoDetalle, setCargandoDetalle] = useState(false);
   const { toast } = useToast();
 
   const cargar = useCallback(async () => {
@@ -75,6 +103,24 @@ export default function VentasTable({
     return () => clearTimeout(t);
   }, [cargar]);
 
+  async function abrirDetalle(venta: Venta) {
+    setDetalle(null);
+    setCargandoDetalle(true);
+    try {
+      const res = await fetch(`/api/ventas/${venta._id}`);
+      const data = await res.json();
+      if (res.ok) {
+        setDetalle(data.venta);
+      } else {
+        toast(data.error || "No se pudo cargar el detalle", "error");
+      }
+    } catch {
+      toast("Error al cargar el detalle", "error");
+    } finally {
+      setCargandoDetalle(false);
+    }
+  }
+
   async function cambiarEstado(venta: Venta, estado: string) {
     const res = await fetch(`/api/admin/ventas?id=${venta._id}`, {
       method: "PATCH",
@@ -84,14 +130,26 @@ export default function VentasTable({
     if (res.ok) {
       toast("Estado actualizado", "success");
       cargar();
+      if (detalle && detalle._id === venta._id) {
+        setDetalle((prev) => (prev ? { ...prev, estado } : prev));
+      }
     } else {
       const data = await res.json();
       toast(data.error || "Error al actualizar", "error");
     }
   }
 
-  const nombreUsuario = (v: Venta) =>
-    typeof v.usuario === "object" && v.usuario ? v.usuario.nombre || v.usuario.email : "Cliente";
+  const nombreUsuario = (v: Venta) => {
+    if (v.datosComprador?.nombre) return v.datosComprador.nombre;
+    return typeof v.usuario === "object" && v.usuario
+      ? v.usuario.nombre || v.usuario.email
+      : "Cliente";
+  };
+
+  const emailUsuario = (v: Venta) => {
+    if (v.datosComprador?.email) return v.datosComprador.email;
+    return typeof v.usuario === "object" && v.usuario ? v.usuario.email : "";
+  };
 
   return (
     <div>
@@ -138,7 +196,7 @@ export default function VentasTable({
         />
       ) : (
         <div className="card overflow-x-auto">
-          <table className="w-full min-w-[1050px] text-sm">
+          <table className="w-full min-w-[1100px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase text-slate-500">
                 <th className="px-5 py-3">Orden</th>
@@ -148,7 +206,7 @@ export default function VentasTable({
                 <th className="px-5 py-3">Método</th>
                 <th className="px-5 py-3">Fecha</th>
                 <th className="px-5 py-3">Estado</th>
-                {admin && <th className="px-5 py-3 text-right">Acciones</th>}
+                <th className="px-5 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -157,10 +215,11 @@ export default function VentasTable({
                   <td className="px-5 py-3.5 font-medium text-slate-800">{venta.ordenId}</td>
                   <td className="px-5 py-3.5 text-slate-600">{nombreUsuario(venta)}</td>
                   <td className="px-5 py-3.5">
-                    <ul className="max-w-[260px] space-y-0.5">
+                    <ul className="max-w-[240px] space-y-0.5">
                       {venta.bonos.map((b, i) => (
                         <li key={i} className="truncate text-slate-600">
                           {b.cantidad} × {b.titulo || b.bonoId?.titulo || "Bono"}
+                          {b.numero ? ` · Nº ${b.numero}` : ""}
                         </li>
                       ))}
                     </ul>
@@ -173,26 +232,29 @@ export default function VentasTable({
                   </td>
                   <td className="px-5 py-3.5 text-slate-600">{formatDate(venta.fechaVenta)}</td>
                   <td className="px-5 py-3.5">
-                    <Badge color={estadoBadge[venta.estado] || "slate"}>{venta.estado}</Badge>
+                    <Badge color={estadoBadge[venta.estado] || "slate"}>
+                      {estadoLabel[venta.estado] || venta.estado}
+                    </Badge>
                   </td>
-                  {admin && (
-                    <td className="px-5 py-3.5">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => cambiarEstado(venta, "pagado")}
-                          className="rounded px-2 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center justify-end gap-2">
+                      {venta.comprobantePago && (
+                        <span
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-brand-600"
+                          title="Comprobante adjunto"
                         >
-                          Marcar pagado
-                        </button>
-                        <button
-                          onClick={() => cambiarEstado(venta, "cancelado")}
-                          className="rounded px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                          <FileCheck className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                      <button
+                        onClick={() => abrirDetalle(venta)}
+                        className="btn-secondary px-3 py-1.5 text-xs"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        Ver
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -231,6 +293,157 @@ export default function VentasTable({
           </div>
         </div>
       )}
+
+      {/* Modal detalle de la venta */}
+      <Modal
+        abierto={!!detalle || cargandoDetalle}
+        onCerrar={() => setDetalle(null)}
+        titulo={detalle ? `Detalle · ${detalle.ordenId}` : "Cargando..."}
+        footer={
+          detalle && (
+            <>
+              <button onClick={() => setDetalle(null)} className="btn-secondary">
+                Cerrar
+              </button>
+              {detalle.estado !== "pagado" && (
+                <button
+                  onClick={() => cambiarEstado(detalle, "pagado")}
+                  className="btn-primary"
+                >
+                  Marcar pagado
+                </button>
+              )}
+              {detalle.estado !== "cancelado" && detalle.estado !== "pagado" && (
+                <button
+                  onClick={() => cambiarEstado(detalle, "cancelado")}
+                  className="btn-danger"
+                >
+                  Cancelar venta
+                </button>
+              )}
+            </>
+          )
+        }
+      >
+        {cargandoDetalle ? (
+          <FullSpinner label="Cargando detalle..." />
+        ) : detalle ? (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm text-slate-500">Orden</p>
+                <p className="font-semibold text-slate-900">{detalle.ordenId}</p>
+              </div>
+              <Badge color={estadoBadge[detalle.estado] || "slate"}>
+                {estadoLabel[detalle.estado] || detalle.estado}
+              </Badge>
+            </div>
+
+            {/* Comprador */}
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <h3 className="text-sm font-semibold text-slate-900">Comprador</h3>
+              <dl className="mt-2 space-y-1 text-sm text-slate-700">
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Nombre:</dt>
+                  <dd>{detalle.datosComprador?.nombre || (typeof detalle.usuario === "object" ? detalle.usuario?.nombre : "") || "—"}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Email:</dt>
+                  <dd>{detalle.datosComprador?.email || (typeof detalle.usuario === "object" ? detalle.usuario?.email : "") || "—"}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Teléfono:</dt>
+                  <dd>{detalle.datosComprador?.telefono || "—"}</dd>
+                </div>
+              </dl>
+            </div>
+
+            {/* Items */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">Bonos</h3>
+              <ul className="divide-y divide-slate-100 rounded-lg border border-slate-200 text-sm">
+                {detalle.bonos.map((b, i) => (
+                  <li key={i} className="flex items-center justify-between px-3 py-2">
+                    <span className="text-slate-600">
+                      {b.cantidad} × {b.titulo || b.bonoId?.titulo || "Bono"}
+                          {b.numero ? ` · Nº ${b.numero}` : ""}
+                    </span>
+                    <span className="font-medium text-slate-800">
+                      {formatCurrency(b.precioUnitario * b.cantidad)}
+                    </span>
+                  </li>
+                ))}
+                <li className="flex items-center justify-between bg-slate-50 px-3 py-2 font-bold text-slate-900">
+                  <span>Total</span>
+                  <span>{formatCurrency(detalle.total)}</span>
+                </li>
+              </ul>
+            </div>
+
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <dt className="text-slate-500">Método de pago</dt>
+                <dd className="font-medium text-slate-800">
+                  {metodoLabel[detalle.metodoPago || ""] || "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-slate-500">Fecha</dt>
+                <dd className="font-medium text-slate-800">{formatDate(detalle.fechaVenta)}</dd>
+              </div>
+              {detalle.datosTransferencia?.referencia && (
+                <div>
+                  <dt className="text-slate-500">Referencia</dt>
+                  <dd className="font-medium text-slate-800">
+                    {detalle.datosTransferencia.referencia}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            {/* Comprobante */}
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">Comprobante de pago</h3>
+              {detalle.comprobantePago ? (
+                esPdf(detalle.comprobantePago) ? (
+                  <a
+                    href={detalle.comprobantePago}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Ver PDF del comprobante
+                  </a>
+                ) : (
+                  <div className="relative h-64 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    <Image
+                      src={detalle.comprobantePago}
+                      alt="Comprobante de pago"
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 600px"
+                    />
+                    <a
+                      href={detalle.comprobantePago}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute right-2 top-2 btn-secondary px-3 py-1.5 text-xs"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Abrir
+                    </a>
+                  </div>
+                )
+              ) : (
+                <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  El comprador aún no ha adjuntado el comprobante.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

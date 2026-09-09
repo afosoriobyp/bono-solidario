@@ -27,6 +27,7 @@ export const bonoSchemaBase = z.object({
   imagen: z.string().optional().nullable(),
   estado: z.enum(["activo", "inactivo"]).default("activo"),
   stock: z.coerce.number().int().min(0).optional().nullable(),
+  numeracion: z.enum(["2", "3", "4"]).optional().nullable(),
   vendidoPor: z.string().optional().nullable()
 });
 
@@ -42,12 +43,20 @@ export const crearVentaSchema = z.object({
     .array(
       z.object({
         bonoId: z.string().min(1),
-        cantidad: z.coerce.number().int().min(1)
+        cantidad: z.coerce.number().int().min(1),
+        numero: z.string().optional().nullable()
       })
     )
     .min(1, "Debe agregar al menos un bono"),
   metodoPago: z.enum(["transferencia", "tarjeta", "efectivo"]).optional(),
   comprobantePago: z.string().optional().nullable(),
+  datosComprador: z
+    .object({
+      nombre: z.string().min(2, "Ingrese el nombre del comprador").optional(),
+      email: z.string().email("Email del comprador inválido").optional(),
+      telefono: z.string().optional()
+    })
+    .optional(),
   datosTransferencia: z
     .object({
       banco: z.string().optional(),
@@ -60,5 +69,7 @@ export const crearVentaSchema = z.object({
 
 export const carritoItemSchema = z.object({
   bonoId: z.string().min(1),
+  numeros: z.array(z.string()).optional(),
+  numero: z.string().optional().nullable(),
   cantidad: z.coerce.number().int().min(1).default(1)
 });

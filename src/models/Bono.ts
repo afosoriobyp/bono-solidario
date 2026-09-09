@@ -11,6 +11,8 @@ export interface IBono {
   imagen?: string;
   estado: string;
   stock: number | null;
+  numeracion: string | null;
+  numerosUsados: string[];
   vendidoPor?: mongoose.Types.ObjectId | null;
   fechaCreacion: Date;
 }
@@ -29,6 +31,8 @@ const BonoSchema = new Schema<IBono>(
       default: ESTADOS_BONO.ACTIVO
     },
     stock: { type: Number, default: null },
+    numeracion: { type: String, default: null, enum: [null, "2", "3", "4"] },
+    numerosUsados: { type: [String], default: [] },
     vendidoPor: { type: Schema.Types.ObjectId, ref: "User" },
     fechaCreacion: { type: Date, default: Date.now }
   },

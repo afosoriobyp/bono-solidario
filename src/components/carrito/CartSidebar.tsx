@@ -70,25 +70,38 @@ export default function CartSidebar() {
                       </div>
                       <p className="text-sm text-slate-500">{formatCurrency(item.valor || 0)}</p>
                       <div className="mt-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
-                            className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                            aria-label="Disminuir"
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
-                          <button
-                            onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
-                            className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                            aria-label="Aumentar"
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                        {item.numeracion ? (
+                          <span className="text-xs text-slate-500">
+                            {item.numeros && item.numeros.length > 0
+                              ? `Números: ${item.numeros.join(", ")}`
+                              : "Números: por elegir"}
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
+                              className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                              aria-label="Disminuir"
+                            >
+                              <Minus className="h-3.5 w-3.5" />
+                            </button>
+                            <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
+                            <button
+                              onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
+                              className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                              aria-label="Aumentar"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
                         <p className="text-sm font-semibold text-slate-900">
-                          {formatCurrency((item.valor || 0) * item.cantidad)}
+                          {formatCurrency(
+                            (item.valor || 0) *
+                              (item.numeracion
+                                ? (item.numeros || []).length
+                                : item.cantidad)
+                          )}
                         </p>
                       </div>
                     </div>

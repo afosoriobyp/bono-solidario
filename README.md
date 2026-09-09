@@ -10,8 +10,9 @@ Aplicación web completa para la **gestión y venta de bonos solidarios**, const
 - **Dashboard Admin**: KPIs, gráficos (ventas por mes, bonos más vendidos, método de pago), CRUD de bonos, ventas, usuarios y envío de notificaciones.
 - **Dashboard Vendedor**: indicadores personales, gestión de sus propios bonos y sus ventas.
 - **Perfil de usuario**: historial de compras y notificaciones.
-- **Notificaciones por correo** (Nodemailer): confirmación de compra al usuario, nueva venta al admin y venta de bono al vendedor.
-- **Pagos**: transferencia bancaria (con datos configurables y comprobante), tarjeta (placeholder para pasarela futura) y efectivo.
+- **Notificaciones por correo** (Brevo + cola en MongoDB): confirmación de compra, aviso al admin y aviso al vendedor, con **envío masivo** desde el panel admin y límite diario controlado.
+- **Pagos**: transferencia bancaria (datos configurables y comprobante en un paso posterior), tarjeta (placeholder para pasarela futura) y **efectivo (solo admin/vendedor)**.
+- **Ventas para admin/vendedor**: tabla con buscador y paginación, detalle de cada venta con **comprobante de pago** y cambio de estado (pagado/cancelado), y registro de venta **a nombre del comprador real**.
 
 ## 🧰 Stack
 
@@ -22,7 +23,8 @@ Aplicación web completa para la **gestión y venta de bonos solidarios**, const
 | Base de datos | MongoDB + Mongoose                             |
 | Autenticación | NextAuth.js (JWT + Credentials)                |
 | Validación  | Zod                                           |
-| Correos     | Nodemailer                                    |
+| Correos     | Brevo + Nodemailer (fallback)                  |
+| Storage     | Cloudflare R2                                  |
 | Iconos      | Lucide React                                  |
 
 ## 📁 Estructura
@@ -34,11 +36,11 @@ src/
 │   ├── login/ register/ perfil/
 │   ├── admin/        → resumen, bonos, ventas, reportes, usuarios, notificaciones
 │   ├── vendedor/     → resumen, bonos, ventas
-│   └── api/          → auth, bonos, ventas, carrito, reportes, upload, notificaciones, config
+│   └── api/          → auth, bonos, ventas, carrito, reportes, upload, notificaciones, config, health, cron
 ├── components/       → ui, bonos, carrito, dashboard, layout, perfil, providers
-├── lib/              → db, auth, email, api, session
-├── models/           → User, Bono, Venta, Carrito, Notification
-├── services/         → bonoService, ventaService, notificacionService
+├── lib/              → db, auth, email, api, session, r2
+├── models/           → User, Bono, Venta, Carrito, Notification, EmailQueue (+ index)
+├── services/         → bonoService, ventaService, notificacionService, emailQueueService
 ├── utils/            → constants, helpers, validations
 └── middleware.ts     → protección de rutas por rol
 ```
@@ -133,6 +135,21 @@ R2_PUBLIC_URL=https://pub-xxxx.r2.dev
 
 La escritura solo ocurre a través de la API autenticada (`/api/upload`); el bucket se mantiene con lectura pública.
 
+## 💳 Ventas y comprobantes de pago
+
+### Métodos de pago según rol
+- **Usuario**: solo ve **transferencia** y **tarjeta**.
+- **Admin/Vendedor**: además pueden pagar en **efectivo** (no requiere comprobante; la venta queda **pagada** de inmediato). El backend también rechaza efectivo para rol `usuario` (403).
+
+### Datos del comprador
+Cuando un **admin o vendedor** registra una venta, el carrito muestra el bloque **"Datos del comprador"** (nombre, email, teléfono). Esos datos se guardan en la venta (`datosComprador`) y la **confirmación por correo se envía al email del comprador real**.
+
+### Comprobante y cambio de estado
+En **Admin → Ventas** y **Vendedor → Mis ventas**:
+- Tabla con **buscador** (orden, cliente o bono) y **paginación** (10 por página).
+- Botón **"Ver"** abre el detalle de la venta: comprador, bonos, total, método, referencia y el **comprobante de pago** (vista previa de imagen o enlace PDF).
+- Desde el detalle, admin/vendedor pueden **"Marcar pagado"** o **"Cancelar venta"**.
+
 ## 🚀 Despliegue en Vercel
 
 ### 1. Repositorio
@@ -186,8 +203,12 @@ npm run dev     # desarrollo
 npm run build   # build de producción
 npm start       # servidor de producción
 npm run lint    # lint
-npm run seed    # datos de prueba
+npm run seed    # datos de prueba (contraseñas demo aleatorias)
 ```
+
+### 🩺 Diagnóstico
+
+`GET /api/health` (público) devuelve el estado de configuración **sin exponer secretos** (qué variables están definidas) y el estado de la conexión a MongoDB. Útil tras desplegar en Vercel para verificar el entorno.
 
 ## 🔒 Seguridad
 
@@ -195,6 +216,7 @@ npm run seed    # datos de prueba
 - Validación con Zod en frontend y backend.
 - Protección de rutas por rol (`src/middleware.ts`) y verificación en cada API.
 - Subida de comprobantes validada (tipos y tamaño máx. 5MB) vía `/api/upload` (R2 en producción, local en desarrollo).
+- Registro central de modelos Mongoose (`src/models/index.ts`) para evitar errores de populate en serverless.
 - Variables de entorno para todos los secretos; `.env*` y `/public/uploads` en `.gitignore`.
 
 ## 🧩 Extensión futura

@@ -10,6 +10,7 @@ type Bono = {
   titulo: string;
   valor: number;
   imagen?: string;
+  numeracion?: string | null;
 };
 
 export default function AddToCartButton({
@@ -29,7 +30,8 @@ export default function AddToCartButton({
       cantidad: 1,
       titulo: bono.titulo,
       valor: bono.valor,
-      imagen: bono.imagen
+      imagen: bono.imagen,
+      numeracion: bono.numeracion || null
     });
     toast("Bono agregado al carrito", "success");
     abrir();
@@ -41,7 +43,8 @@ export default function AddToCartButton({
       cantidad: 1,
       titulo: bono.titulo,
       valor: bono.valor,
-      imagen: bono.imagen
+      imagen: bono.imagen,
+      numeracion: bono.numeracion || null
     });
     router.push("/carrito");
   };

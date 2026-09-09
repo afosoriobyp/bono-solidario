@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return unauthorized();
-  if (session.user.rol !== "admin") return forbidden();
+  if (!["admin", "vendedor"].includes(session.user.rol || "")) return forbidden();
 
   try {
     const { searchParams } = new URL(req.url);

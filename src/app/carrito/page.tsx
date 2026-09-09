@@ -20,23 +20,74 @@ import { useCarrito } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Spinner } from "@/components/ui/Spinner";
 import PasoComprobante from "@/components/carrito/PasoComprobante";
-import { formatCurrency } from "@/utils/helpers";
+import NumeroSelector from "@/components/carrito/NumeroSelector";
+import { formatCurrency, numerosDisponibles } from "@/utils/helpers";
 
 type VentaPendiente = { id: string; ordenId: string; metodoPago: string };
 
 const STORAGE_KEY = "ventaPendiente";
 
 export default function CarritoPage() {
-  const { items, subtotal, actualizarCantidad, eliminar, vaciar } = useCarrito();
+  const { items, subtotal, actualizarCantidad, setNumeros, eliminar, vaciar } = useCarrito();
   const { data: session, status } = useSession();
   const { toast } = useToast();
   const router = useRouter();
+
+  // "Efectivo" solo disponible para admin y vendedor (los usuarios no lo ven)
+  const esStaff =
+    session?.user?.rol === "admin" || session?.user?.rol === "vendedor";
+
+  const metodosPago = [
+    { id: "transferencia", icono: Building2, label: "Transferencia bancaria" },
+    { id: "tarjeta", icono: CreditCard, label: "Tarjeta de crédito/débito" }
+  ];
+  if (esStaff) {
+    metodosPago.push({ id: "efectivo", icono: Banknote, label: "Efectivo (punto de venta)" });
+  }
 
   const [metodoPago, setMetodoPago] = useState("transferencia");
   const [confirmando, setConfirmando] = useState(false);
   const [datosBanco, setDatosBanco] = useState<Record<string, string>>({});
   const [ventaPendiente, setVentaPendiente] = useState<VentaPendiente | null>(null);
   const [exito, setExito] = useState(false);
+  const [comprador, setComprador] = useState({
+    nombre: "",
+    email: "",
+    telefono: ""
+  });
+  const [numerosMap, setNumerosMap] = useState<Record<string, string[]>>({});
+
+  // Cargar números disponibles para bonos con numeración
+  useEffect(() => {
+    const numerados = items.filter((i) => i.numeracion);
+    if (numerados.length === 0) return;
+    let activo = true;
+    Promise.all(
+      numerados.map((item) =>
+        fetch(`/api/bonos/${item.bonoId}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) =>
+            d?.bono
+              ? {
+                  bonoId: item.bonoId,
+                  disponibles: numerosDisponibles(item.numeracion, d.bono.numerosUsados)
+                }
+              : null
+          )
+          .catch(() => null)
+      )
+    ).then((resultados) => {
+      if (!activo) return;
+      const map: Record<string, string[]> = {};
+      for (const r of resultados) {
+        if (r) map[r.bonoId] = r.disponibles;
+      }
+      setNumerosMap(map);
+    });
+    return () => {
+      activo = false;
+    };
+  }, [items]);
 
   useEffect(() => {
     fetch("/api/config")
@@ -78,6 +129,16 @@ export default function CarritoPage() {
       router.push("/login");
       return;
     }
+    if (esStaff && (!comprador.nombre.trim() || !comprador.email.trim())) {
+      toast("Ingresa el nombre y email del comprador", "info");
+      return;
+    }
+    // Bonos con numeración: cada uno requiere al menos un número seleccionado
+    const sinNumero = items.find((i) => i.numeracion && (i.numeros || []).length === 0);
+    if (sinNumero) {
+      toast(`Selecciona al menos un número para "${sinNumero.titulo}"`, "info");
+      return;
+    }
 
     setConfirmando(true);
     try {
@@ -85,8 +146,20 @@ export default function CarritoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ bonoId: i.bonoId, cantidad: i.cantidad })),
-          metodoPago
+          items: items.flatMap((i) =>
+            i.numeracion
+              ? (i.numeros || []).map((n) => ({ bonoId: i.bonoId, cantidad: 1, numero: n }))
+              : [{ bonoId: i.bonoId, cantidad: i.cantidad }]
+          ),
+          metodoPago,
+          // Staff registra venta a nombre del comprador real
+          datosComprador: esStaff
+            ? {
+                nombre: comprador.nombre || undefined,
+                email: comprador.email || undefined,
+                telefono: comprador.telefono || undefined
+              }
+            : undefined
         })
       });
 
@@ -215,27 +288,40 @@ export default function CarritoPage() {
                   <div className="flex-1">
                     <p className="font-medium text-slate-900">{item.titulo}</p>
                     <p className="text-sm text-slate-500">{formatCurrency(item.valor || 0)} c/u</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                        aria-label="Disminuir"
-                      >
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
-                      <button
-                        onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                        aria-label="Aumentar"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    {item.numeracion ? (
+                      <NumeroSelector
+                        bonoId={item.bonoId}
+                        titulo={item.titulo || "bono"}
+                        numeros={item.numeros || []}
+                        disponibles={numerosMap[item.bonoId] || []}
+                        onChange={(numeros) => setNumeros(item.bonoId, numeros)}
+                      />
+                    ) : (
+                      <div className="mt-2 flex items-center gap-2">
+                        <button
+                          onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                          aria-label="Disminuir"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
+                        <button
+                          onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                          aria-label="Aumentar"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-slate-900">
-                      {formatCurrency((item.valor || 0) * item.cantidad)}
+                      {formatCurrency(
+                        (item.valor || 0) *
+                          (item.numeracion ? (item.numeros || []).length : item.cantidad)
+                      )}
                     </p>
                     <button
                       onClick={() => eliminar(item.bonoId)}
@@ -254,11 +340,7 @@ export default function CarritoPage() {
           <div className="card mt-6 p-6">
             <h2 className="text-lg font-semibold text-slate-900">Método de pago</h2>
             <div className="mt-4 space-y-3">
-              {[
-                { id: "transferencia", icono: Building2, label: "Transferencia bancaria" },
-                { id: "tarjeta", icono: CreditCard, label: "Tarjeta de crédito/débito" },
-                { id: "efectivo", icono: Banknote, label: "Efectivo (punto de venta)" }
-              ].map((m) => {
+              {metodosPago.map((m) => {
                 const Icono = m.icono;
                 return (
                   <label
@@ -318,6 +400,47 @@ export default function CarritoPage() {
               </div>
             )}
           </div>
+
+          {/* Datos del comprador (solo admin/vendedor) */}
+          {esStaff && (
+            <div className="card mt-6 p-6">
+              <h2 className="text-lg font-semibold text-slate-900">Datos del comprador</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Como {session?.user?.rol === "admin" ? "administrador" : "vendedor"}, puedes registrar
+                la venta a nombre del comprador real. La confirmación se enviará a su correo.
+              </p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="label">Nombre *</label>
+                  <input
+                    value={comprador.nombre}
+                    onChange={(e) => setComprador((p) => ({ ...p, nombre: e.target.value }))}
+                    className="input"
+                    placeholder="Nombre del comprador"
+                  />
+                </div>
+                <div>
+                  <label className="label">Email *</label>
+                  <input
+                    type="email"
+                    value={comprador.email}
+                    onChange={(e) => setComprador((p) => ({ ...p, email: e.target.value }))}
+                    className="input"
+                    placeholder="correo@comprador.com"
+                  />
+                </div>
+                <div>
+                  <label className="label">Teléfono</label>
+                  <input
+                    value={comprador.telefono}
+                    onChange={(e) => setComprador((p) => ({ ...p, telefono: e.target.value }))}
+                    className="input"
+                    placeholder="+57 300 000 0000"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Resumen */}

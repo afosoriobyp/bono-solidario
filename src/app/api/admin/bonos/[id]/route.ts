@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { obtenerBono, actualizarBono, eliminarBono } from "@/services/bonoService";
+import Bono from "@/models/Bono";
 import { bonoSchemaBase } from "@/utils/validations";
 import { forbidden, notFound, unauthorized, apiError } from "@/lib/api";
 
@@ -38,6 +39,15 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     delete data.vendidoPor;
 
     const bono = await actualizarBono(params.id, data);
+
+    // Inicializar numerosUsados si el bono pasa a tener numeración y no existe el campo
+    if (parsed.data.numeracion) {
+      await Bono.updateOne(
+        { _id: params.id, numerosUsados: { $exists: false } },
+        { $set: { numerosUsados: [] } }
+      );
+    }
+
     return Response.json({ bono });
   } catch (error) {
     return apiError(error, "No se pudo actualizar el bono");
