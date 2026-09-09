@@ -81,11 +81,11 @@ export default function Header() {
                 )}
               </Link>
               <button
-                onClick={() =>
-                  signOut({ callbackUrl: "/" }).then(() =>
-                    toast("Sesión cerrada", "info")
-                  )
-                }
+                onClick={() => {
+                  // Redirigir al mismo origen actual (evita saltar a localhost en producción)
+                  const callbackUrl = `${window.location.origin}/`;
+                  signOut({ callbackUrl }).then(() => toast("Sesión cerrada", "info"));
+                }}
                 className="rounded-lg p-2 text-slate-600 transition-colors hover:bg-slate-100"
                 aria-label="Cerrar sesión"
               >
