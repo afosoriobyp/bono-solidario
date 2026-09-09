@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Venta from "@/models/Venta";
+import Bono from "@/models/Bono";
 import { connectDB } from "@/lib/db";
 import { unauthorized } from "@/lib/api";
 
