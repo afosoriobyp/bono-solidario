@@ -4,7 +4,7 @@
   "private": true,
   "description": "Aplicación web para la gestión y venta de bonos solidarios",
   "engines": {
-    "node": ">=18.17.0"
+    "node": "20.x"
   },
   "scripts": {
     "dev": "next dev",
