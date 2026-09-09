@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
             { status: 400 }
           );
         }
-        if (bono.numerosUsados.includes(item.numero) || numerosSolicitados.has(item.numero)) {
+        if ((bono.numerosUsados || []).includes(item.numero) || numerosSolicitados.has(item.numero)) {
           return Response.json(
             { error: `El número ${item.numero} del bono "${bono.titulo}" ya no está disponible` },
             { status: 400 }
