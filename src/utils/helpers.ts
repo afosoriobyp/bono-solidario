@@ -36,3 +36,38 @@ export function classNames(...classes: (string | false | null | undefined)[]): s
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// ─── Numeración de bonos ───────────────────────────────────────
+
+export type Numeracion = "2" | "3" | "4" | null;
+
+export const NUMERACION_LABEL: Record<string, string> = {
+  "2": "00-99 (2 dígitos)",
+  "3": "000-999 (3 dígitos)",
+  "4": "0000-9999 (4 dígitos)"
+};
+
+export function rangoNumeracion(digitos: string | null | undefined): string[] | null {
+  if (!digitos) return null;
+  const n = Number(digitos);
+  if (![2, 3, 4].includes(n)) return null;
+  const max = Math.pow(10, n) - 1;
+  const arr: string[] = [];
+  for (let i = 0; i <= max; i++) arr.push(String(i).padStart(n, "0"));
+  return arr;
+}
+
+export function numerosDisponibles(
+  digitos: string | null | undefined,
+  usados: (string | null | undefined)[] | undefined
+): string[] {
+  const rango = rangoNumeracion(digitos);
+  if (!rango) return [];
+  const set = new Set((usados || []).map((x) => String(x)));
+  return rango.filter((x) => !set.has(x));
+}
+
+export function validarNumero(numero: string, digitos: string): boolean {
+  const n = Number(digitos);
+  return new RegExp(`^\\d{${n}}$`).test(numero);
+}

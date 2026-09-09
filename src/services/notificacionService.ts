@@ -5,7 +5,7 @@ export type DatosVentaNotificacion = {
   ordenId: string;
   nombreUsuario: string;
   emailUsuario: string;
-  items: { titulo: string; cantidad: number; precioUnitario: number }[];
+  items: { titulo: string; numero?: string | null; cantidad: number; precioUnitario: number }[];
   total: number;
   fechaVenta: Date;
   metodoPago?: string;
@@ -32,7 +32,7 @@ function renderItems(items: DatosVentaNotificacion["items"]): string {
     .map(
       (i) =>
         `<tr>
-          <td style="padding:8px;border-bottom:1px solid #e2e8f0">${i.titulo}</td>
+          <td style="padding:8px;border-bottom:1px solid #e2e8f0">${i.titulo}${i.numero ? ` · Nº ${i.numero}` : ""}</td>
           <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:center">${i.cantidad}</td>
           <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${formatCurrency(i.precioUnitario)}</td>
           <td style="padding:8px;border-bottom:1px solid #e2e8f0;text-align:right">${formatCurrency(i.precioUnitario * i.cantidad)}</td>

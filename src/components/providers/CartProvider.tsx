@@ -10,6 +10,8 @@ export type CarritoItem = {
   valor?: number;
   imagen?: string;
   stock?: number | null;
+  numeracion?: string | null;
+  numero?: string | null;
 };
 
 type CarritoContextType = {
@@ -22,6 +24,7 @@ type CarritoContextType = {
   cerrar: () => void;
   agregar: (bono: CarritoItem) => Promise<void>;
   actualizarCantidad: (bonoId: string, cantidad: number) => Promise<void>;
+  actualizarNumero: (bonoId: string, numero: string | null) => Promise<void>;
   eliminar: (bonoId: string) => Promise<void>;
   vaciar: () => Promise<void>;
 };
@@ -32,6 +35,19 @@ export function useCarrito() {
   const ctx = useContext(CarritoContext);
   if (!ctx) throw new Error("useCarrito debe usarse dentro de CartProvider");
   return ctx;
+}
+
+function mapearItem(i: any): CarritoItem {
+  return {
+    bonoId: i.bonoId._id.toString(),
+    cantidad: i.cantidad,
+    titulo: i.bonoId.titulo,
+    valor: i.bonoId.valor,
+    imagen: i.bonoId.imagen,
+    stock: i.bonoId.stock ?? null,
+    numeracion: i.bonoId.numeracion ?? null,
+    numero: i.numero ?? null
+  };
 }
 
 export default function CartProvider({ children }: { children: React.ReactNode }) {
@@ -62,35 +78,21 @@ export default function CartProvider({ children }: { children: React.ReactNode }
               await fetch("/api/carrito", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bonoId: item.bonoId, cantidad: item.cantidad })
+                body: JSON.stringify({
+                  bonoId: item.bonoId,
+                  cantidad: item.cantidad,
+                  numero: item.numero || undefined
+                })
               }).catch(() => {});
             }
             const res2 = await fetch("/api/carrito");
             const data2 = await res2.json();
-            setItems(
-              data2.carrito?.items?.map((i: any) => ({
-                bonoId: i.bonoId._id.toString(),
-                cantidad: i.cantidad,
-                titulo: i.bonoId.titulo,
-                valor: i.bonoId.valor,
-                imagen: i.bonoId.imagen,
-                stock: i.bonoId.stock
-              })) || []
-            );
+            setItems((data2.carrito?.items || []).map(mapearItem));
             localStorage.removeItem("carrito");
             return;
           }
 
-          setItems(
-            serverItems.map((i: any) => ({
-              bonoId: i.bonoId._id.toString(),
-              cantidad: i.cantidad,
-              titulo: i.bonoId.titulo,
-              valor: i.bonoId.valor,
-              imagen: i.bonoId.imagen,
-              stock: i.bonoId.stock
-            }))
-          );
+          setItems(serverItems.map(mapearItem));
         })
         .catch(() => {});
     } else {
@@ -104,8 +106,8 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       }
       setItems(parsed);
 
-      // Enriquecer items antiguos sin datos del bono (titulo/valor/imagen)
-      const faltantes = parsed.filter((i) => i.valor == null || !i.titulo);
+      // Enriquecer items antiguos sin datos del bono (titulo/valor/imagen/numeracion)
+      const faltantes = parsed.filter((i) => i.valor == null || !i.titulo || i.numeracion == null);
       if (faltantes.length > 0) {
         Promise.all(
           faltantes.map((i) =>
@@ -125,7 +127,8 @@ export default function CartProvider({ children }: { children: React.ReactNode }
                 titulo: item.titulo || r.bono.titulo,
                 valor: item.valor ?? r.bono.valor,
                 imagen: item.imagen || r.bono.imagen,
-                stock: item.stock ?? r.bono.stock ?? null
+                stock: item.stock ?? r.bono.stock ?? null,
+                numeracion: item.numeracion ?? r.bono.numeracion ?? null
               };
             })
           );
@@ -140,101 +143,111 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     }
   }, [items, session?.user?.id]);
 
-  const agregar = useCallback(async (bono: CarritoItem) => {
-    setCargando(true);
-    try {
-      if (session?.user?.id) {
-        const res = await fetch("/api/carrito", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bonoId: bono.bonoId, cantidad: bono.cantidad || 1 })
-        });
-        if (!res.ok) throw new Error("No se pudo agregar");
-        const data = await res.json();
-        setItems(
-          data.carrito.items.map((i: any) => ({
-            bonoId: i.bonoId._id.toString(),
-            cantidad: i.cantidad,
-            titulo: i.bonoId.titulo,
-            valor: i.bonoId.valor,
-            imagen: i.bonoId.imagen,
-            stock: i.bonoId.stock
-          }))
-        );
-      } else {
-        setItems((prev) => {
-          const existente = prev.find((i) => i.bonoId === bono.bonoId);
-          if (existente) {
-            return prev.map((i) =>
-              i.bonoId === bono.bonoId
-                ? { ...i, cantidad: i.cantidad + (bono.cantidad || 1) }
-                : i
-            );
-          }
-          return [...prev, { ...bono, cantidad: bono.cantidad || 1 }];
-        });
-      }
-    } finally {
-      setCargando(false);
-    }
-  }, [session?.user?.id]);
-
-  const actualizarCantidad = useCallback(async (bonoId: string, cantidad: number) => {
-    if (session?.user?.id) {
+  const agregar = useCallback(
+    async (bono: CarritoItem) => {
       setCargando(true);
       try {
-        const res = await fetch("/api/carrito", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bonoId, cantidad })
-        });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        setItems(
-          data.carrito.items.map((i: any) => ({
-            bonoId: i.bonoId._id.toString(),
-            cantidad: i.cantidad,
-            titulo: i.bonoId.titulo,
-            valor: i.bonoId.valor,
-            imagen: i.bonoId.imagen
-          }))
-        );
-      } catch {
+        if (session?.user?.id) {
+          const res = await fetch("/api/carrito", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bonoId: bono.bonoId, cantidad: bono.cantidad || 1 })
+          });
+          if (!res.ok) throw new Error("No se pudo agregar");
+          const data = await res.json();
+          setItems(data.carrito.items.map(mapearItem));
+        } else {
+          setItems((prev) => {
+            const existente = prev.find((i) => i.bonoId === bono.bonoId);
+            if (existente) {
+              // Bonos numerados: siempre 1 unidad (cada número es único)
+              const cantidad = bono.numeracion ? 1 : existente.cantidad + (bono.cantidad || 1);
+              return prev.map((i) =>
+                i.bonoId === bono.bonoId
+                  ? { ...i, cantidad, numeracion: i.numeracion ?? bono.numeracion ?? null }
+                  : i
+              );
+            }
+            return [...prev, { ...bono, cantidad: bono.cantidad || 1 }];
+          });
+        }
       } finally {
         setCargando(false);
       }
-    } else {
-      if (cantidad <= 0) {
-        setItems((prev) => prev.filter((i) => i.bonoId !== bonoId));
-      } else {
-        setItems((prev) => prev.map((i) => (i.bonoId === bonoId ? { ...i, cantidad } : i)));
-      }
-    }
-  }, [session?.user?.id]);
+    },
+    [session?.user?.id]
+  );
 
-  const eliminar = useCallback(async (bonoId: string) => {
-    if (session?.user?.id) {
-      const res = await fetch("/api/carrito", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bonoId })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setItems(
-          (data.carrito?.items || []).map((i: any) => ({
-            bonoId: i.bonoId._id.toString(),
-            cantidad: i.cantidad,
-            titulo: i.bonoId.titulo,
-            valor: i.bonoId.valor,
-            imagen: i.bonoId.imagen
-          }))
-        );
+  const actualizarCantidad = useCallback(
+    async (bonoId: string, cantidad: number) => {
+      if (session?.user?.id) {
+        setCargando(true);
+        try {
+          const res = await fetch("/api/carrito", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bonoId, cantidad })
+          });
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          setItems(data.carrito.items.map(mapearItem));
+        } catch {
+        } finally {
+          setCargando(false);
+        }
+      } else {
+        if (cantidad <= 0) {
+          setItems((prev) => prev.filter((i) => i.bonoId !== bonoId));
+        } else {
+          setItems((prev) => prev.map((i) => (i.bonoId === bonoId ? { ...i, cantidad } : i)));
+        }
       }
-    } else {
-      setItems((prev) => prev.filter((i) => i.bonoId !== bonoId));
-    }
-  }, [session?.user?.id]);
+    },
+    [session?.user?.id]
+  );
+
+  const actualizarNumero = useCallback(
+    async (bonoId: string, numero: string | null) => {
+      if (session?.user?.id) {
+        setCargando(true);
+        try {
+          const res = await fetch("/api/carrito", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bonoId, numero })
+          });
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          setItems(data.carrito.items.map(mapearItem));
+        } catch {
+        } finally {
+          setCargando(false);
+        }
+      } else {
+        setItems((prev) => prev.map((i) => (i.bonoId === bonoId ? { ...i, numero } : i)));
+      }
+    },
+    [session?.user?.id]
+  );
+
+  const eliminar = useCallback(
+    async (bonoId: string) => {
+      if (session?.user?.id) {
+        const res = await fetch("/api/carrito", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bonoId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setItems((data.carrito?.items || []).map(mapearItem));
+        }
+      } else {
+        setItems((prev) => prev.filter((i) => i.bonoId !== bonoId));
+      }
+    },
+    [session?.user?.id]
+  );
 
   const vaciar = useCallback(async () => {
     if (session?.user?.id) {
@@ -257,10 +270,22 @@ export default function CartProvider({ children }: { children: React.ReactNode }
       cerrar: () => setAbierto(false),
       agregar,
       actualizarCantidad,
+      actualizarNumero,
       eliminar,
       vaciar
     }),
-    [items, totalItems, subtotal, abierto, cargando, agregar, actualizarCantidad, eliminar, vaciar]
+    [
+      items,
+      totalItems,
+      subtotal,
+      abierto,
+      cargando,
+      agregar,
+      actualizarCantidad,
+      actualizarNumero,
+      eliminar,
+      vaciar
+    ]
   );
 
   return <CarritoContext.Provider value={value}>{children}</CarritoContext.Provider>;

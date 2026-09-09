@@ -17,6 +17,7 @@ type Bono = {
   imagen?: string;
   estado: string;
   stock?: number | null;
+  numeracion?: string | null;
 };
 
 const estadoStyles: Record<string, string> = {
@@ -38,7 +39,8 @@ export default function BonoCard({ bono }: { bono: Bono }) {
       titulo: bono.titulo,
       valor: bono.valor,
       imagen: bono.imagen,
-      stock: bono.stock
+      stock: bono.stock,
+      numeracion: bono.numeracion || null
     });
     toast("Bono agregado al carrito", "success");
     abrir();

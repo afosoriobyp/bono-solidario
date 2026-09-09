@@ -29,7 +29,7 @@ type Venta = {
   comprobantePago?: string;
   usuario?: { nombre?: string; email?: string } | string;
   datosComprador?: { nombre?: string; email?: string; telefono?: string };
-  bonos: { titulo?: string; cantidad: number; precioUnitario: number; bonoId?: any }[];
+  bonos: { titulo?: string; numero?: string | null; cantidad: number; precioUnitario: number; bonoId?: any }[];
 };
 
 type VentaDetalle = Venta & {
@@ -219,6 +219,7 @@ export default function VentasTable({ endpoint }: { endpoint: string }) {
                       {venta.bonos.map((b, i) => (
                         <li key={i} className="truncate text-slate-600">
                           {b.cantidad} × {b.titulo || b.bonoId?.titulo || "Bono"}
+                          {b.numero ? ` · Nº ${b.numero}` : ""}
                         </li>
                       ))}
                     </ul>
@@ -365,6 +366,7 @@ export default function VentasTable({ endpoint }: { endpoint: string }) {
                   <li key={i} className="flex items-center justify-between px-3 py-2">
                     <span className="text-slate-600">
                       {b.cantidad} × {b.titulo || b.bonoId?.titulo || "Bono"}
+                          {b.numero ? ` · Nº ${b.numero}` : ""}
                     </span>
                     <span className="font-medium text-slate-800">
                       {formatCurrency(b.precioUnitario * b.cantidad)}

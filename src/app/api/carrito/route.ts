@@ -41,8 +41,13 @@ export async function POST(req: NextRequest) {
 
     if (item) {
       item.cantidad += parsed.data.cantidad;
+      if (parsed.data.numero) item.numero = parsed.data.numero;
     } else {
-      carrito.items.push({ bonoId: parsed.data.bonoId, cantidad: parsed.data.cantidad });
+      carrito.items.push({
+        bonoId: parsed.data.bonoId,
+        cantidad: parsed.data.cantidad,
+        numero: parsed.data.numero || undefined
+      });
     }
 
     carrito.fechaActualizacion = new Date();
@@ -72,6 +77,9 @@ export async function PATCH(req: NextRequest) {
     if (!item) return Response.json({ error: "Item no está en el carrito" }, { status: 404 });
 
     const cantidad = parsed.data.cantidad ?? item.cantidad;
+    if (parsed.data.numero !== undefined) {
+      item.numero = parsed.data.numero;
+    }
     if (cantidad <= 0) {
       carrito.items = carrito.items.filter(
         (i: any) => i.bonoId._id.toString() !== parsed.data.bonoId

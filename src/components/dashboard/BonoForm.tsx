@@ -15,6 +15,7 @@ type BonoFormProps = {
     imagen?: string;
     estado: string;
     stock?: number | null;
+    numeracion?: string | null;
   } | null;
   onSubmit: (data: Record<string, unknown>) => void;
 };
@@ -28,7 +29,8 @@ export default function BonoForm({ bono, onSubmit }: BonoFormProps) {
     fechaVencimiento: "",
     imagen: "",
     estado: "activo",
-    stock: ""
+    stock: "",
+    numeracion: ""
   });
   const [subiendo, setSubiendo] = useState(false);
 
@@ -42,7 +44,8 @@ export default function BonoForm({ bono, onSubmit }: BonoFormProps) {
         fechaVencimiento: bono.fechaVencimiento?.slice(0, 10) || "",
         imagen: bono.imagen || "",
         estado: bono.estado === "agotado" ? "inactivo" : bono.estado,
-        stock: bono.stock != null ? String(bono.stock) : ""
+        stock: bono.stock != null ? String(bono.stock) : "",
+        numeracion: bono.numeracion || ""
       });
     } else {
       const hoy = new Date().toISOString().slice(0, 10);
@@ -54,7 +57,8 @@ export default function BonoForm({ bono, onSubmit }: BonoFormProps) {
         fechaVencimiento: "",
         imagen: "",
         estado: "activo",
-        stock: ""
+        stock: "",
+        numeracion: ""
       });
     }
   }, [bono]);
@@ -93,7 +97,8 @@ export default function BonoForm({ bono, onSubmit }: BonoFormProps) {
       fechaVencimiento: form.fechaVencimiento || null,
       imagen: form.imagen || null,
       estado: form.estado,
-      stock: form.stock === "" ? null : Number(form.stock)
+      stock: form.stock === "" ? null : Number(form.stock),
+      numeracion: form.numeracion || null
     });
   }
 
@@ -138,16 +143,33 @@ export default function BonoForm({ bono, onSubmit }: BonoFormProps) {
           />
         </div>
         <div>
-          <label className="label">Stock (vacío = ilimitado)</label>
-          <input
-            type="number"
-            min={0}
-            value={form.stock}
-            onChange={(e) => update("stock", e.target.value)}
+          <label className="label">Numeración</label>
+          <select
+            value={form.numeracion}
+            onChange={(e) => update("numeracion", e.target.value)}
             className="input"
-            placeholder="Ilimitado"
-          />
+          >
+            <option value="">Sin numeración</option>
+            <option value="2">00-99 (2 dígitos)</option>
+            <option value="3">000-999 (3 dígitos)</option>
+            <option value="4">0000-9999 (4 dígitos)</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-400">
+            Si se define, cada bono vendido se asignará a un número de la serie.
+          </p>
         </div>
+      </div>
+
+      <div>
+        <label className="label">Stock (vacío = ilimitado)</label>
+        <input
+          type="number"
+          min={0}
+          value={form.stock}
+          onChange={(e) => update("stock", e.target.value)}
+          className="input"
+          placeholder="Ilimitado"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

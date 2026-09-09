@@ -20,14 +20,14 @@ import { useCarrito } from "@/components/providers/CartProvider";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Spinner } from "@/components/ui/Spinner";
 import PasoComprobante from "@/components/carrito/PasoComprobante";
-import { formatCurrency } from "@/utils/helpers";
+import { formatCurrency, numerosDisponibles } from "@/utils/helpers";
 
 type VentaPendiente = { id: string; ordenId: string; metodoPago: string };
 
 const STORAGE_KEY = "ventaPendiente";
 
 export default function CarritoPage() {
-  const { items, subtotal, actualizarCantidad, eliminar, vaciar } = useCarrito();
+  const { items, subtotal, actualizarCantidad, actualizarNumero, eliminar, vaciar } = useCarrito();
   const { data: session, status } = useSession();
   const { toast } = useToast();
   const router = useRouter();
@@ -54,6 +54,39 @@ export default function CarritoPage() {
     email: "",
     telefono: ""
   });
+  const [numerosMap, setNumerosMap] = useState<Record<string, string[]>>({});
+
+  // Cargar números disponibles para bonos con numeración
+  useEffect(() => {
+    const numerados = items.filter((i) => i.numeracion);
+    if (numerados.length === 0) return;
+    let activo = true;
+    Promise.all(
+      numerados.map((item) =>
+        fetch(`/api/bonos/${item.bonoId}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) =>
+            d?.bono
+              ? {
+                  bonoId: item.bonoId,
+                  disponibles: numerosDisponibles(item.numeracion, d.bono.numerosUsados)
+                }
+              : null
+          )
+          .catch(() => null)
+      )
+    ).then((resultados) => {
+      if (!activo) return;
+      const map: Record<string, string[]> = {};
+      for (const r of resultados) {
+        if (r) map[r.bonoId] = r.disponibles;
+      }
+      setNumerosMap(map);
+    });
+    return () => {
+      activo = false;
+    };
+  }, [items]);
 
   useEffect(() => {
     fetch("/api/config")
@@ -99,6 +132,12 @@ export default function CarritoPage() {
       toast("Ingresa el nombre y email del comprador", "info");
       return;
     }
+    // Bonos con numeración: cada uno requiere un número disponible seleccionado
+    const sinNumero = items.find((i) => i.numeracion && !i.numero);
+    if (sinNumero) {
+      toast(`Selecciona un número para "${sinNumero.titulo}"`, "info");
+      return;
+    }
 
     setConfirmando(true);
     try {
@@ -106,7 +145,11 @@ export default function CarritoPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ bonoId: i.bonoId, cantidad: i.cantidad })),
+          items: items.map((i) => ({
+            bonoId: i.bonoId,
+            cantidad: i.cantidad,
+            numero: i.numero || undefined
+          })),
           metodoPago,
           // Staff registra venta a nombre del comprador real
           datosComprador: esStaff
@@ -244,23 +287,44 @@ export default function CarritoPage() {
                   <div className="flex-1">
                     <p className="font-medium text-slate-900">{item.titulo}</p>
                     <p className="text-sm text-slate-500">{formatCurrency(item.valor || 0)} c/u</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                        aria-label="Disminuir"
-                      >
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
-                      <button
-                        onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
-                        aria-label="Aumentar"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    {item.numeracion ? (
+                      <div className="mt-2">
+                        <label className="label">Número del bono *</label>
+                        <select
+                          value={item.numero || ""}
+                          onChange={(e) => actualizarNumero(item.bonoId, e.target.value || null)}
+                          className="input w-48"
+                        >
+                          <option value="">Selecciona un número</option>
+                          {(numerosMap[item.bonoId] || []).map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                        {(numerosMap[item.bonoId] || []).length === 0 && (
+                          <p className="mt-1 text-xs text-red-600">No quedan números disponibles.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-2 flex items-center gap-2">
+                        <button
+                          onClick={() => actualizarCantidad(item.bonoId, item.cantidad - 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                          aria-label="Disminuir"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="w-6 text-center text-sm font-medium">{item.cantidad}</span>
+                        <button
+                          onClick={() => actualizarCantidad(item.bonoId, item.cantidad + 1)}
+                          className="flex h-7 w-7 items-center justify-center rounded border border-slate-300 hover:bg-slate-100"
+                          aria-label="Aumentar"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-slate-900">

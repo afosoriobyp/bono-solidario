@@ -7,6 +7,7 @@ import { generateOrderId } from "@/utils/helpers";
 export interface ItemVenta {
   bonoId: string;
   cantidad: number;
+  numero?: string | null;
 }
 
 export type VentaPopulada = IVenta & {
@@ -39,7 +40,10 @@ export async function crearVenta(data: {
   // Resolver bonos y calcular total
   const ids = data.items.map((i) => i.bonoId);
   const bonosRaw = await Bono.find({ _id: { $in: ids } }).lean();
-  const bonos = bonosRaw as unknown as Pick<IBono, "_id" | "titulo" | "valor" | "stock">[];
+  const bonos = bonosRaw as unknown as Pick<
+    IBono,
+    "_id" | "titulo" | "valor" | "stock" | "numeracion" | "numerosUsados"
+  >[];
 
   const bonosVenta = data.items.map((item) => {
     const bono = bonos.find((b) => String(b._id) === item.bonoId);
@@ -47,6 +51,7 @@ export async function crearVenta(data: {
     return {
       bonoId: bono._id as mongoose.Types.ObjectId,
       titulo: bono.titulo,
+      numero: item.numero || null,
       cantidad: item.cantidad,
       precioUnitario: bono.valor
     };
@@ -70,11 +75,17 @@ export async function crearVenta(data: {
     datosTransferencia: data.datosTransferencia
   });
 
-  // Descontar stock si aplica
+  // Descontar stock si aplica y reclamar números de numeración
   for (const item of data.items) {
     const bono = bonos.find((b) => String(b._id) === item.bonoId);
-    if (bono && bono.stock != null && bono.stock > 0) {
+    if (!bono) continue;
+    if (bono.stock != null && bono.stock > 0) {
       await Bono.findByIdAndUpdate(bono._id, { $inc: { stock: -item.cantidad } });
+    }
+    if (bono.numeracion && item.numero) {
+      await Bono.findByIdAndUpdate(bono._id, {
+        $addToSet: { numerosUsados: item.numero }
+      });
     }
   }
 

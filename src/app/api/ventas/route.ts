@@ -12,6 +12,7 @@ import User from "@/models/User";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import { crearVentaSchema } from "@/utils/validations";
+import { validarNumero } from "@/utils/helpers";
 import { unauthorized, forbidden, apiError, getErrorMessage } from "@/lib/api";
 
 export const maxDuration = 60;
@@ -40,14 +41,17 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Verificar stock disponible
+    // Verificar stock disponible y números de numeración
     const ids = parsed.data.items.map((i) => i.bonoId);
     const bonosRaw = await Bono.find({ _id: { $in: ids }, estado: "activo" }).lean();
     const bonos = bonosRaw as unknown as {
       _id: mongoose.Types.ObjectId;
       titulo: string;
       stock: number | null;
+      numeracion: string | null;
+      numerosUsados: string[];
     }[];
+    const numerosSolicitados = new Set<string>();
     for (const item of parsed.data.items) {
       const bono = bonos.find((b) => String(b._id) === item.bonoId);
       if (!bono) {
@@ -58,6 +62,27 @@ export async function POST(req: NextRequest) {
           { error: `Stock insuficiente para "${bono.titulo}"` },
           { status: 400 }
         );
+      }
+      if (bono.numeracion) {
+        if (!item.numero) {
+          return Response.json(
+            { error: `Debes seleccionar un número para "${bono.titulo}"` },
+            { status: 400 }
+          );
+        }
+        if (!validarNumero(item.numero, bono.numeracion)) {
+          return Response.json(
+            { error: `Número inválido para "${bono.titulo}"` },
+            { status: 400 }
+          );
+        }
+        if (bono.numerosUsados.includes(item.numero) || numerosSolicitados.has(item.numero)) {
+          return Response.json(
+            { error: `El número ${item.numero} del bono "${bono.titulo}" ya no está disponible` },
+            { status: 400 }
+          );
+        }
+        numerosSolicitados.add(item.numero);
       }
     }
 
@@ -92,6 +117,7 @@ export async function POST(req: NextRequest) {
       emailUsuario: emailComprador,
       items: ventaLean.bonos.map((b: any) => ({
         titulo: b.titulo,
+        numero: b.numero || null,
         cantidad: b.cantidad,
         precioUnitario: b.precioUnitario
       })),

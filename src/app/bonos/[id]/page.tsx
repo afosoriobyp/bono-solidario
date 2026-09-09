@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, Clock, PackageX, ShieldCheck, ShoppingCart, ArrowLeft } from "lucide-react";
+import { CalendarDays, Clock, PackageX, ShieldCheck, ShoppingCart, ArrowLeft, Hash } from "lucide-react";
 import { obtenerBono } from "@/services/bonoService";
-import { formatCurrency, formatDate } from "@/utils/helpers";
+import { formatCurrency, formatDate, NUMERACION_LABEL } from "@/utils/helpers";
 import { ESTADOS_BONO_LABEL } from "@/utils/constants";
 import AddToCartButton from "@/components/bonos/AddToCartButton";
 
@@ -78,6 +78,12 @@ export default async function BonoDetallePage({
               <ShieldCheck className="h-4 w-4 text-brand-600" />
               Disponibilidad: {bono.stock != null ? `${bono.stock} unidades` : "Ilimitado"}
             </div>
+            {bono.numeracion && (
+              <div className="flex items-center gap-2">
+                <Hash className="h-4 w-4 text-brand-600" />
+                Numeración: {NUMERACION_LABEL[bono.numeracion] || bono.numeracion}
+              </div>
+            )}
           </div>
 
           <div className="mt-6">
@@ -86,7 +92,8 @@ export default async function BonoDetallePage({
                 _id: String(bono._id),
                 titulo: bono.titulo,
                 valor: bono.valor,
-                imagen: bono.imagen
+                imagen: bono.imagen,
+                numeracion: bono.numeracion || null
               }}
               agotado={agotado}
             />
