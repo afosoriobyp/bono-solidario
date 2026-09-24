@@ -47,7 +47,7 @@ src/
 
 ## 🚀 Instalación
 
-Requisitos: **Node.js 18+** y **MongoDB** local o remoto.
+Requisitos: **Node.js 24.x** (fijado en `engines` de `package.json` y en `.nvmrc`, para que local y Vercel usen la misma versión) y **MongoDB** local o remoto.
 
 ```bash
 # 1. Instalar dependencias
@@ -164,6 +164,8 @@ git push -u origin main
 
 ### 2. Importar en Vercel
 Ve a [vercel.com/new](https://vercel.com/new), importa el repo (framework: **Next.js**). El build es automático.
+
+> **Node.js**: Vercel elige la versión desde `engines.node` (`24.x`). Node 20 llegó a su fin de vida y sus builds fallan desde el **1 de octubre**. Si en *Settings → General → Node.js Version* tienes fijado manualmente **20.x**, cámbialo a **24.x** (ese ajuste del panel tiene prioridad sobre `package.json`).
 
 ### 3. Variables de entorno en Vercel (Settings → Environment Variables)
 Copia los valores de tu `.env` local (¡no subas `.env` al repo!, ya está en `.gitignore`):
